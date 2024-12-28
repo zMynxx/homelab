@@ -1,0 +1,10 @@
+**/**/*.tfvars
+**/**/*.pub
+**/**/ansible
+**/**/logs
+**/**/.terraform
+**/**/.terraform.lock
+**/**/.terraform.lock.hcl
+**/**/terraform.tfstate
+**/**/terraform.tfstate.backup
+**/**/*secret*
