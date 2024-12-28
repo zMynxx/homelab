@@ -1,6 +1,5 @@
 **/**/*.tfvars
 **/**/*.pub
-**/**/ansible
 **/**/logs
 **/**/.terraform
 **/**/.terraform.lock
@@ -8,3 +7,5 @@
 **/**/terraform.tfstate
 **/**/terraform.tfstate.backup
 **/**/*secret*
+
+Ansible/00-Init/ansible

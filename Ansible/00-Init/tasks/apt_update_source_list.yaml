@@ -1,0 +1,14 @@
+- name: Update /etc/apt/sources.list
+  when: ansible_distribution in ['Ubuntu', 'Debian']
+  replace:
+    path: /etc/apt/sources.list
+    regexp: '(buster|bullseye)'
+    replace: '{{ flavor }}'
+    backup: yes
+
+- name: Update pve subcription repository
+  when: ansible_distribution in ['Ubuntu', 'Debian']
+  copy:
+    dest: /etc/apt/sources.list.d/pve-no-subscription.list
+    content: |
+      deb http://download.proxmox.com/debian/pve {{ flavor }} pve-no-subscription

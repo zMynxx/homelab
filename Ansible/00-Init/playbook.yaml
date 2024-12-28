@@ -1,0 +1,9 @@
+# Ansible Playbook
+-
+  name: Bootstrap Proxmox Server 
+  hosts: pve
+  tasks:
+
+    # - include_tasks: tasks/apt_update_source_list.yaml
+    # - include_tasks: tasks/apt_update_upgrade.yaml
+    - include_tasks: tasks/set_static_ip.yaml

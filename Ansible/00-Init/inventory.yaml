@@ -1,0 +1,19 @@
+pve:
+  hosts:
+    192.168.7.6
+  vars:
+    flavor: bookworm
+    static_ip: 192.168.7.128
+    subnet_mask: 25
+
+opnsense:
+  hosts:
+    firewall:
+  vars:
+    flavor: bullseye
+
+# all:
+#   vars:
+#     ansible_connection: ssh
+#     ansible_ssh_pass: Passw0rd
+#     ansible_host:

@@ -1,0 +1,7 @@
+- name: Apt update & upgrade 
+  when: ansible_distribution in ['Ubuntu', 'Debian']
+  become: yes
+  apt:
+    update_cache: yes
+    upgrade: yes
+  changed_when: false

@@ -1,0 +1,22 @@
+- name: Set static IP for Proxmox
+  when: ansible_distribution in ['Ubuntu', 'Debian']
+  become: yes
+  replace:
+    path: /etc/network/interfaces
+    regexp: '192.168.7.6/24'
+    replace: '{{ static_ip }}/{{ subnet_mask }}'
+    backup: yes
+
+- name: Update hosts file 
+  when: ansible_distribution in ['Ubuntu', 'Debian']
+  become: yes
+  replace:
+    path: /etc/hosts
+    regexp: '192.168.7.6'
+    replace: '{{ static_ip }}'
+    backup: yes
+
+- name: Reboot the system
+  when: ansible_distribution in ['Ubuntu', 'Debian'] 
+  reboot:
+    reboot_timeout: 600
