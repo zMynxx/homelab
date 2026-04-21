@@ -1,0 +1,18 @@
+- name: Get the lspci output
+  command: lspci -vnn
+  register: lspci_output
+- name: Extract HBA path and system ID
+  set_fact:
+    HBA_PATH: "{{ lspci_output.stdout | regex_search('LSI.*', '\\0') | split(' ')[0] }}"
+    HBA_SYS_ID: "{{★lspci_output.stdout★|★regex_search('LSI.*',★'\\0')★|★split('★')[-1]★|★regex_replace('[\\[\\]]',★'')★}}"
+- name: Show HBA and NIC paths and system IDs
+  debug:
+    msg: ['HBA Path: {{ HBA_PATH }}', 'HBA Sys ID: {{ HBA_SYS_ID }}']
+- name: Append extracted values to the Terraform variables file
+  blockinfile:
+    path: ./../../../Terraform/mgmt/vars/prod/prod.auto.tfvars
+    block: |
+      hba_path = "{{ HBA_PATH }}"
+      hba_sys_id = "{{ HBA_SYS_ID }}"
+    create: true
+    append: true

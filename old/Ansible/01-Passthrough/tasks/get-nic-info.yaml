@@ -1,0 +1,18 @@
+- name: Get the lspci output
+  command: lspci -vnn
+  register: lspci_output
+- name: Get the NIC path
+  set_fact:
+    NIC_PATH: "{{★lspci_output.stdout★|★regex_search('Gigabit★Ethernet★Controller.*',★'\\0')★|★split('★')[0]★}}"
+    NIC_SYS_ID: "{{★lspci_output.stdout★|★regex_search('Gigabit★Ethernet★Controller.*',★'\\0')★|★split('★')[-1]★|★regex_replace('[\\[\\]]',★'')★}}"
+- name: Show HBA and NIC paths and system IDs
+  debug:
+    msg: ['NIC Path: {{ NIC_PATH }}', 'NIC Sys ID: {{ NIC_SYS_ID }}']
+- name: Append extracted values to the Terraform variables file
+  blockinfile:
+    path: ./../../../Terraform/mgmt/vars/prod/prod.auto.tfvars
+    block: |
+      nic_path = "{{ NIC_PATH }}"
+      nic_sys_id = "{{ NIC_SYS_ID }}"
+    create: true
+    append: true

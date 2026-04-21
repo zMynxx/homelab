@@ -1,0 +1,24 @@
+os: "linux"
+arch: "amd64"
+
+talos_version: v1.7.0
+talosctl_version: v1.7.5
+control_plane_ip: 192.168.1.34
+
+worker_1: 192.168.1.32
+worker_2: 192.168.1.33
+
+config_directory: "/Users/develeap/Desktop/Projects/homelab/talos/.talos"
+config_file: "/Users/develeap/Desktop/Projects/homelab/talos/.talos/talosconfig" 
+
+kube_vip_version: "v0.8.0"
+vip_interface: eth0
+vip: 192.168.1.100
+
+metallb_version: v0.13.12
+lb_range: 192.168.1.80-192.168.1.90
+lb_pool_name: first-pool
+
+ansible_user: develeap
+ansible_become: true
+ansible_become_method: sudo

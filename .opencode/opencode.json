@@ -1,0 +1,16 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "opnsense": {
+      "type": "local",
+      "command": ["npx","opnsense-mcp-server"],
+      "enabled": true,
+      "environment": {
+        "OPNSENSE_HOST": "${OPNSENSE_HOST}",
+        "OPNSENSE_API_KEY": "${OPNSENSE_API_KEY}",
+        "OPNSENSE_API_SECRET": "${OPNSENSE_API_SECRET}",
+        "OPNSENSE_VERIFY_SSL": "${OPNSENSE_VERIFY_SSL}"
+      }
+    }
+  }
+}

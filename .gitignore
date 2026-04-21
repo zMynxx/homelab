@@ -7,5 +7,5 @@
 **/**/terraform.tfstate
 **/**/terraform.tfstate.backup
 **/**/*secret*
-
 Ansible/00-Init/ansible
+Ansible/01-Passthrough/ansible

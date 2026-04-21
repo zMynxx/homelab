@@ -1,0 +1,6 @@
+# Ansible Playbook
+- name: Extract HBA and NIC information from remote machine
+  hosts: pve
+  tasks:
+    - include_tasks: ./tasks/get-hba-info.yaml
+    - include_tasks: ./tasks/get-nic-info.yaml

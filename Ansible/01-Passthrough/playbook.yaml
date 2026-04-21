@@ -1,7 +1,0 @@
-# Ansible Playbook
--
-  name: Passthrough Playbook
-  hosts: pve
-  tasks:
-
-    - include_tasks: tasks/fetch_sata_information.yaml
