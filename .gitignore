@@ -8,5 +8,6 @@
 **/**/terraform.tfstate.backup
 **/**/*secret*
 !**/**/*.sops.*
+!**/**/*.sops.bin
 Ansible/00-Init/ansible
 Ansible/01-Passthrough/ansible

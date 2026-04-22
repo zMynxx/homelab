@@ -46,3 +46,16 @@ sops-decrypt file:
 [script("bash")]
 sops-edit file:
 	sops "{{file}}"
+
+# Encrypt a binary/non-YAML file (XML, .bak, etc.) to a .sops.bin file
+# Usage: just sops-encrypt-binary source.xml dest.sops.bin
+[script("bash")]
+sops-encrypt-binary src dst:
+	AGE_PUB=$(grep '^# public key:' key.txt.secret | awk '{print $NF}')
+	sops --config /dev/null --encrypt --age "$AGE_PUB" --input-type binary --output-type binary "{{src}}" > "{{dst}}"
+
+# Decrypt a .sops.bin file to stdout
+# Usage: just sops-decrypt-binary path/to/file.sops.bin
+[script("bash")]
+sops-decrypt-binary file:
+	sops --decrypt --input-type binary --output-type binary "{{file}}"
