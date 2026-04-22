@@ -1,7 +1,7 @@
 # Firewall Rules Configuration
 
-**Last Updated**: April 22, 2026  
-**Status**: ✅ Complete - All VLAN firewall rules configured and active (includes qfeeds threat blocking)
+**Last Updated**: April 23, 2026  
+**Status**: ✅ Complete - All VLAN firewall rules configured and active (includes qfeeds threat blocking, TinyCA ACME access)
 
 ---
 
@@ -62,9 +62,10 @@ This document describes the complete firewall rule matrix for all VLANs in the h
 
 | Seq | Action | Protocol | Source | Destination | Port | Description |
 |-----|--------|----------|--------|-------------|------|-------------|
-| 1 | 🚫 BLOCK | any | opt4 net | Internal_Networks | any | Block guest access to LAN and internal VLANs |
-| 1 | 🚫 BLOCK | any | opt4 net | `__qfeeds_malware_ip` | any | **Ingress QFeeds** — block known malicious IPs (threat feed) |
-| 2 | ✅ PASS | any | opt4 net | any | any | Allow guest internet access and gateway communication |
+| 1 | ✅ PASS | TCP | opt4 net | 192.168.10.37 | 8443 | Allow DMZ to TinyCA ACME (step-ca:8443) |
+| 2 | 🚫 BLOCK | any | opt4 net | Internal_Networks | any | Block guest access to LAN and internal VLANs |
+| 2 | 🚫 BLOCK | any | opt4 net | `__qfeeds_malware_ip` | any | **Ingress QFeeds** — block known malicious IPs (threat feed) |
+| 3 | ✅ PASS | any | opt4 net | any | any | Allow guest internet access and gateway communication |
 
 **Allowed Access**:
 - ✅ Internet (all protocols)
@@ -191,6 +192,7 @@ This document describes the complete firewall rule matrix for all VLANs in the h
 | **DNS** | 53 UDP/TCP | ✅ OPNsense | ✅ OPNsense | ✅ OPNsense |
 | **DHCP** | 67/68 UDP | ✅ Auto | ✅ Auto | ✅ Auto |
 | **HTTPS (OPNsense)** | 443, 8443 | ✅ Yes | ❌ No | ✅ Yes |
+| **TinyCA ACME** | 8443 | ✅ Yes | ✅ Yes (explicit PASS) | ✅ Yes |
 | **SSH** | 22 | ✅ Internal only | ❌ No | ✅ Internal only |
 | **HTTP/HTTPS** | 80/443 | ❌ **BLOCKED** | ✅ Internet | ✅ Internet |
 | **NTP** | 123 UDP | ❌ **BLOCKED** | ✅ Internet | ✅ Internet |
@@ -439,6 +441,6 @@ curl -k -u "${OPNSENSE_API_KEY}:${OPNSENSE_API_SECRET}" \
 
 ---
 
-**Document Status**: ✅ Complete and accurate as of April 22, 2026  
-**Last Verified**: All rules confirmed active via API query — qfeeds BLOCK rules active on WAN, LAN, VLAN 20 (opt4), VLAN 30 (opt5)  
+**Document Status**: ✅ Complete and accurate as of April 23, 2026  
+**Last Verified**: All rules confirmed active via API query — qfeeds BLOCK rules active on WAN, LAN, VLAN 20 (opt4), VLAN 30 (opt5); TinyCA ACME PASS added on VLAN 20 (opt4) seq 1  
 **Configuration Applied**: All changes applied and operational

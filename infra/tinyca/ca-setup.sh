@@ -133,7 +133,7 @@ cat > "${STEPPATH}/config/ca.json" <<'EOF'
   "address": ":8443",
   "dnsNames": [
     "192.168.10.37",
-    "tinyca.homelab.internal"
+    "tinyca.opnsense.internal"
   ],
   "logger": {
     "format": "json"
