@@ -339,18 +339,64 @@ Public DNS (Cloudflare 1.1.1.1, Quad9 9.9.9.9)
 ✅ MaxMind GeoBlocking  
 ✅ Ruckus R720 Wi-Fi AP (802.11ac Wave 2)  
 ✅ CUDY 16-port PoE switch (unmanaged)  
+✅ **VLAN infrastructure fully operational** (VLANs 10, 20, 30 on igc1 trunk)  
+✅ **Ruckus SSIDs configured with VLAN tagging** (Homelab-Mgmt, Homelab-Guest, Homelab-Internal)  
+✅ **DHCP services active** on all VLANs (ISC DHCPv4 Legacy)  
+✅ **Guest network (VLAN 20) operational** - Isolated from internal networks with internet access  
+✅ **Firewall rules active** - Guest network isolation enforced  
 
 **Ready to Deploy:**
-🔵 UniFi USW-Flex-2.5G-5 managed switch  
+🔵 UniFi USW-Flex-2.5G-5 managed switch (physical migration pending)  
+
+**In Progress:**
+🟡 **VLAN isolation testing** - Complete test plan in [VLAN_COMPLETION_GUIDE.md](./VLAN_COMPLETION_GUIDE.md)  
 
 **Planned:**
-⏳ VLAN segmentation (VLANs 10, 20, 30)  
-⏳ UniFi switch VLAN trunking to OPNsense  
-⏳ Ruckus R720 SSID-to-VLAN mapping  
+⏳ UniFi switch deployment with VLAN trunk configuration  
+⏳ Physical cabling migration (Ruckus AP to UniFi switch)  
+⏳ Device migration to appropriate VLANs  
 ⏳ IPS/IDS (Suricata/Snort)  
 ⏳ Threat intelligence feeds (q-feeds)  
 ⏳ HAProxy reverse proxy  
 ⏳ VPN (WireGuard/IPsec)  
+
+**VLAN Configuration Status:**
+- **VLAN 10 (Management)**: ✅ **Fully Configured**
+  - Interface: vlan03 → opt6 → 192.168.10.1/24
+  - DHCP: 192.168.10.100-200
+  - Firewall: ✅ **5 rules active** (blocks internet, allows infrastructure only)
+  - Devices: ⏳ None connected yet
+  - Security: Internet blocked, OPNsense UI + internal access allowed
+  
+- **VLAN 20 (DMZ/Guest)**: ✅ **Fully Functional**
+  - Interface: vlan01 → opt4 → 192.168.20.1/24
+  - DHCP: 192.168.20.100-200 (active)
+  - Firewall: ✅ **2 rules active** (blocks internal networks, allows internet)
+  - Devices: ✅ Guest clients connected (26k packets RX, 67k packets TX)
+  - SSID: "Homelab-Guest" with wireless client isolation enabled
+  
+- **VLAN 30 (Internal)**: ✅ **Fully Configured**
+  - Interface: vlan02 → opt5 → 192.168.30.1/24
+  - DHCP: 192.168.30.100-200
+  - Firewall: ✅ **5 rules active** (allows internet + management, blocks DMZ)
+  - Devices: ⏳ None connected yet (Talos cluster at 192.168.30.27-31 on legacy LAN)
+  - Security: Full internal access, DMZ isolated
+
+**Trunk Configuration:**
+- Parent Interface: igc1 (1 Gbps active, 2.5 Gbps capable)
+- Protocol: 802.1Q
+- Tagged VLANs: 10, 20, 30
+- Untagged: Legacy LAN (192.168.1.x) for backward compatibility
+
+**Next Steps:**
+1. Test VLAN isolation (see [VLAN_COMPLETION_GUIDE.md](./VLAN_COMPLETION_GUIDE.md#verification--testing))
+2. Deploy UniFi switch with trunk configuration
+3. Migrate devices to appropriate VLANs
+
+**Documentation:**
+- Detailed configuration guide: [VLAN_COMPLETION_GUIDE.md](./VLAN_COMPLETION_GUIDE.md)
+- Implementation summary: [VLAN_IMPLEMENTATION_SUMMARY.md](./VLAN_IMPLEMENTATION_SUMMARY.md)
+- Firewall rules matrix: [FIREWALL_RULES.md](./FIREWALL_RULES.md)  
 
 ## References
 
