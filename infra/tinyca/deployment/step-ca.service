@@ -1,0 +1,38 @@
+[Unit]
+Description=step-ca Certificate Authority
+Documentation=https://smallstep.com/docs/step-ca/
+After=network-online.target pcscd.service
+Wants=network-online.target
+Requires=pcscd.service
+
+[Service]
+Type=simple
+User=step
+Group=step
+Environment=STEPPATH=/etc/step-ca
+
+EnvironmentFile=-/etc/step-ca/secrets/env
+
+WorkingDirectory=/etc/step-ca
+
+ExecStartPre=/bin/sh -c 'ykman info > /dev/null 2>&1 || (echo "YubiKey not detected, cannot start step-ca" && exit 1)'
+ExecStart=/usr/bin/step-ca ${STEPPATH}/config/ca.json --password-file ${STEPPATH}/secrets/yubikey-pin
+
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=30
+TimeoutStopSec=30
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=step-ca
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/etc/step-ca/db /etc/step-ca/certs
+ReadOnlyPaths=/etc/step-ca/config /etc/step-ca/secrets
+
+[Install]
+WantedBy=multi-user.target
