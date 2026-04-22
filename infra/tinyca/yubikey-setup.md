@@ -52,9 +52,13 @@ ykman piv certificates export 9c /tmp/slot9c.crt 2>/dev/null && \
 
 > ⚠️ This destroys all keys and certificates in all PIV slots. Only do this if you are
 > generating a completely new PKI.
+>
+> **Prefer `pki-init.sh`** — it automates everything in this section (reset, PIN, PUK,
+> management key, cert generation, YubiKey import, and export to `/root/pki-export/`).
+> Use the manual commands below only for troubleshooting or partial re-initialization.
 
 ```bash
-ykman piv reset
+ykman piv reset --force
 ```
 
 After reset, all PIV slots are empty and credentials return to factory defaults:
@@ -66,14 +70,18 @@ After reset, all PIV slots are empty and credentials return to factory defaults:
 
 ```bash
 # Change PIN (6-8 digits or alphanumeric)
-ykman piv access change-pin
+ykman piv access change-pin --pin 123456
 
 # Change PUK (used to unblock a locked PIN)
-ykman piv access change-puk
+ykman piv access change-puk --puk 12345678
 
-# Change management key (used to import certs and keys)
-ykman piv access change-management-key --generate --protect
-# --generate: random 24-byte key  --protect: stored on device, unlocked by PIN
+# Change management key to random AES256, protected by PIN
+ykman piv access change-management-key \
+    --algorithm AES256 \
+    --management-key 010203040506070801020304050607080102030405060708 \
+    --generate \
+    --protect
+# --generate: random 24-byte AES256 key  --protect: stored on device, unlocked by PIN
 ```
 
 > **Record the PIN and PUK somewhere secure** (password manager, not Git).
@@ -82,6 +90,9 @@ ykman piv access change-management-key --generate --protect
 ---
 
 ## Step 3 — Import CA Keys into PIV Slots
+
+> **Note**: `pki-init.sh` handles this automatically after generating the certs.
+> Run these commands manually only if you are importing pre-existing keys.
 
 This assumes you have already generated `root_ca.crt`, `root_ca.key`,
 `intermediate_ca.crt`, `intermediate_ca.key` — see REBUILD.md Phase 1.
@@ -112,7 +123,8 @@ ykman piv certificates export 9c /tmp/check.crt && step certificate inspect /tmp
 ### Destroy key files from disk
 
 ```bash
-shred -u root_ca.key intermediate_ca.key
+# Back up keys to your password manager FIRST (see REBUILD.md 1.2), then:
+shred -uzv root_ca.key intermediate_ca.key
 rm -f /tmp/check.crt /tmp/slot9a.crt /tmp/slot9c.crt
 ```
 

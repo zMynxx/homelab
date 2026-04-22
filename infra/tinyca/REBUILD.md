@@ -46,83 +46,64 @@ ykman piv certificates export 9c intermediate_ca.crt 2>/dev/null && echo "SLOT 9
 
 ---
 
-## Phase 1 — Generate PKI (if YubiKey is empty)
+## Phase 1 — Generate PKI and Initialize YubiKey
 
-> **Do this offline.** Use an air-gapped machine or a fresh USB-booted session.
-> Generated keys never touch disk outside of this phase.
+> **Run directly on the RPi** with the YubiKey plugged in. The `pki-init.sh` script handles
+> everything: PIV reset, PIN/PUK/management key setup, cert generation, YubiKey import, and export.
 
-### 1.1 Prepare an offline workspace
-
-```bash
-# Create a temp workspace on an encrypted USB or RAM disk
-mkdir -p /tmp/pki-offline
-cd /tmp/pki-offline
-```
-
-### 1.2 Generate Root CA
+### 1.1 Copy and run pki-init.sh
 
 ```bash
-step certificate create "Homelab Root CA" root_ca.crt root_ca.key \
-  --profile root-ca \
-  --not-after 87600h \      # 10 years
-  --kty EC \
-  --curve P-384 \
-  --no-password \
-  --insecure               # key stays in this dir temporarily, goes to YubiKey next
+scp infra/tinyca/pki-init.sh zmynx@192.168.1.37:~/
+ssh zmynx@192.168.1.37 sudo bash ~/pki-init.sh
 ```
 
-### 1.3 Generate Intermediate CA
+The script will prompt you to:
+1. Confirm the destructive PIV reset
+2. Set a new PIN (6–8 chars, alphanumeric)
+3. Set a new PUK (6–8 chars, alphanumeric)
+4. Enter the PIN once more for management key protection
+
+On completion, find in `/root/pki-export/`:
+- `root_ca.crt` / `root_ca.key`
+- `intermediate_ca.crt` / `intermediate_ca.key`
+
+### 1.2 Back up keys and certs
+
+SCP to your workstation and import into your password manager:
 
 ```bash
-step certificate create "Homelab Intermediate CA" intermediate_ca.crt intermediate_ca.key \
-  --profile intermediate-ca \
-  --ca root_ca.crt \
-  --ca-key root_ca.key \
-  --not-after 43800h \     # 5 years
-  --kty EC \
-  --curve P-384 \
-  --no-password \
-  --insecure
+scp zmynx@192.168.1.37:/root/pki-export/*.crt .
+scp zmynx@192.168.1.37:/root/pki-export/*.key .
 ```
 
-### 1.4 Import keys into YubiKey PIV slots
+Then encrypt and commit to the repo:
 
 ```bash
-# Import root CA key → slot 9a (authentication slot, used for signing)
-ykman piv keys import 9a root_ca.key
-ykman piv certificates import 9a root_ca.crt
-
-# Import intermediate CA key → slot 9c (digital signature slot)
-ykman piv keys import 9c intermediate_ca.key
-ykman piv certificates import 9c intermediate_ca.crt
-
-# Verify both slots are populated
-ykman piv info
+# Files land in infra/tinyca/pki/pki-export/*.secret (gitignored)
+# Build the SOPS-encrypted backup
+python3 -c "
+import os, sys
+files = {
+  'root_ca_crt': open('infra/tinyca/pki/pki-export/root_ca.crt.secret').read(),
+  'root_ca_key': open('infra/tinyca/pki/pki-export/root_ca.key.secret').read(),
+  'intermediate_ca_crt': open('infra/tinyca/pki/pki-export/intermediate_ca.crt.secret').read(),
+  'intermediate_ca_key': open('infra/tinyca/pki/pki-export/intermediate_ca.key.secret').read(),
+}
+for k, v in files.items():
+    print(f'{k}: |')
+    for line in v.splitlines(): print('  ' + line)
+" > infra/tinyca/pki/pki-export/pki-export.sops.yaml
+SOPS_AGE_KEY_FILE=key.txt.secret sops --encrypt --in-place infra/tinyca/pki/pki-export/pki-export.sops.yaml
 ```
 
-### 1.5 Destroy key files from disk
+### 1.3 Shred private keys from RPi
 
 ```bash
-# Keys are now in YubiKey. Remove them from disk.
-shred -u root_ca.key intermediate_ca.key
-
-# Keep the .crt files — you need to distribute them
-cp root_ca.crt intermediate_ca.crt ~/Desktop/   # copy before wiping USB
+ssh zmynx@192.168.1.37 sudo shred -uzv /root/pki-export/root_ca.key /root/pki-export/intermediate_ca.key
 ```
 
-### 1.6 Save root cert for distribution
-
-The `root_ca.crt` must be distributed to:
-- Talos machine config (`machine.files[]`)
-- cert-manager `ClusterIssuer` CA bundle
-- Istio `cacerts` secret
-
-Store it in the repo (cert only, never key):
-```bash
-# In repo: infra/tinyca/pki/root_ca.crt  (tracked in git - it's public)
-mkdir -p infra/tinyca/pki
-cp root_ca.crt infra/tinyca/pki/root_ca.crt
-```
+Public certs (`*.crt`) may stay in `/root/pki-export/` — they are not sensitive.
 
 ---
 
@@ -132,36 +113,37 @@ cp root_ca.crt infra/tinyca/pki/root_ca.crt
 
 1. Download **Ubuntu Server 24.04 LTS (64-bit ARM)** for Raspberry Pi:
    https://ubuntu.com/download/raspberry-pi
-2. Flash to SD card (or USB SSD if using USB boot):
+2. Flash to SD card using Raspberry Pi Imager (or `dd`)
+3. Before ejecting, overwrite the `user-data` file on the `system-boot` partition with the
+   pre-configured cloud-init from the repo:
+
    ```bash
-   # macOS - use Raspberry Pi Imager or:
-   sudo dd if=ubuntu-24.04-preinstalled-server-arm64+raspi.img of=/dev/rdisk<N> bs=4m status=progress
-   ```
-3. Before ejecting, mount the boot partition and pre-configure:
-
-   **Enable SSH** (create empty file):
-   ```bash
-   touch /Volumes/system-boot/ssh
+   # Decrypt and write the cloud-init user-data
+   SOPS_AGE_KEY_FILE=key.txt.secret sops --decrypt --extract '["user_data"]' \
+     infra/tinyca/pki/secrets.sops.yaml > /Volumes/system-boot/user-data
+   # OR — use the plaintext user-data.secret directly (gitignored)
+   cp infra/tinyca/user-data.secret /Volumes/system-boot/user-data
    ```
 
-   **Set hostname** in `user-data` cloud-init file:
-   ```yaml
-   hostname: tinyca
-   ```
+   This pre-configures: hostname `tinyca`, user `zmynx`, SSH public key auth, password.
 
-### 2.2 First boot — basic setup
+### 2.2 First boot
 
-Connect via SSH (default user `ubuntu`, password `ubuntu`):
+Boot the RPi and find its DHCP-assigned IP from OPNsense. SSH in:
 
 ```bash
-ssh ubuntu@<dhcp-assigned-ip>   # find IP from OPNsense DHCP leases
+ssh zmynx@<dhcp-ip>
 
-# Change password immediately
-passwd
+# Verify step and step-ca are installed (done by bootstrap.sh via cloud-init)
+step version
+step-ca version
+```
 
-# Update system
-sudo apt update && sudo apt full-upgrade -y
-sudo reboot
+If bootstrap.sh was not run via cloud-init, run it manually:
+
+```bash
+scp infra/tinyca/bootstrap.sh zmynx@<dhcp-ip>:~/
+ssh zmynx@<dhcp-ip> sudo bash ~/bootstrap.sh
 ```
 
 ### 2.3 Static IP on VLAN 10
@@ -203,11 +185,11 @@ sudo netplan apply
 Copy and run [`bootstrap.sh`](bootstrap.sh):
 
 ```bash
-scp infra/tinyca/bootstrap.sh ubuntu@192.168.10.37:~/
-ssh ubuntu@192.168.10.37 'sudo bash ~/bootstrap.sh'
+scp infra/tinyca/bootstrap.sh zmynx@192.168.10.37:~/
+ssh zmynx@192.168.10.37 'sudo bash ~/bootstrap.sh'
 ```
 
-This installs: `step-ca`, `step`, YubiKey PKCS#11 libraries, `pcscd`, ufw.
+This installs: `step` v0.30.2, `step-ca` v0.30.2 (from GitHub releases), YubiKey PKCS#11 libraries (`libykcs11`, `yubico-piv-tool`), `pcscd`, `ykman`, ufw.
 
 ---
 
@@ -226,11 +208,12 @@ ykman info
 
 ### 3.2 Find the PKCS#11 module path
 
+`bootstrap.sh` creates a symlink at `/usr/local/lib/libykcs11.so` pointing to the platform
+library. Verify it exists:
+
 ```bash
-ls /usr/lib/x86_64-linux-gnu/libykcs11.so 2>/dev/null || \
-ls /usr/lib/aarch64-linux-gnu/libykcs11.so 2>/dev/null || \
-find /usr/lib -name 'libykcs11*' 2>/dev/null
-# Expected: /usr/lib/aarch64-linux-gnu/libykcs11.so
+ls -la /usr/local/lib/libykcs11.so
+# Expected: /usr/local/lib/libykcs11.so -> /usr/lib/aarch64-linux-gnu/libykcs11.so.2
 ```
 
 ### 3.3 Initialize step-ca with YubiKey
@@ -329,12 +312,14 @@ step ca init \
 
 ### 3.5 Copy root cert to step-ca
 
+Extract the root cert from the SOPS backup and copy it to the RPi:
+
 ```bash
-sudo mkdir -p /etc/step-ca/certs
-# Copy root_ca.crt (public cert only) from your workstation
-scp infra/tinyca/pki/root_ca.crt ubuntu@192.168.10.37:/tmp/root_ca.crt
-sudo mv /tmp/root_ca.crt /etc/step-ca/certs/root_ca.crt
-sudo chmod 644 /etc/step-ca/certs/root_ca.crt
+SOPS_AGE_KEY_FILE=key.txt.secret sops --decrypt --extract '["root_ca_crt"]' \
+  infra/tinyca/pki/pki-export/pki-export.sops.yaml > /tmp/root_ca.crt
+scp /tmp/root_ca.crt zmynx@192.168.10.37:/tmp/root_ca.crt
+ssh zmynx@192.168.10.37 'sudo mkdir -p /etc/step-ca/certs && sudo mv /tmp/root_ca.crt /etc/step-ca/certs/root_ca.crt && sudo chmod 644 /etc/step-ca/certs/root_ca.crt'
+rm /tmp/root_ca.crt
 ```
 
 ---
@@ -344,18 +329,18 @@ sudo chmod 644 /etc/step-ca/certs/root_ca.crt
 Install the systemd unit from [`deployment/step-ca.service`](deployment/step-ca.service):
 
 ```bash
-scp infra/tinyca/deployment/step-ca.service ubuntu@192.168.10.37:/tmp/
-ssh ubuntu@192.168.10.37 'sudo mv /tmp/step-ca.service /etc/systemd/system/ && sudo systemctl daemon-reload'
+scp infra/tinyca/deployment/step-ca.service zmynx@192.168.10.37:/tmp/
+ssh zmynx@192.168.10.37 'sudo mv /tmp/step-ca.service /etc/systemd/system/ && sudo systemctl daemon-reload'
 ```
 
 The service requires YubiKey presence (`After=pcscd.service`). The YubiKey PIN is passed via
-a credentials file (not hardcoded):
+`/etc/step-ca/secrets/yubikey-pin` (read-only to the `step` service user):
 
 ```bash
-# Create PIN file (only root-readable)
-sudo bash -c 'echo -n "<your-yubikey-pin>" > /etc/step-ca/yubikey-pin'
-sudo chmod 600 /etc/step-ca/yubikey-pin
-sudo chown root:root /etc/step-ca/yubikey-pin
+# Create secrets dir and PIN file
+ssh zmynx@192.168.10.37 'sudo mkdir -p /etc/step-ca/secrets'
+# Write PIN (replace <pin> with your actual PIN)
+ssh zmynx@192.168.10.37 'sudo bash -c "echo -n <pin> > /etc/step-ca/secrets/yubikey-pin && chmod 640 /etc/step-ca/secrets/yubikey-pin && chown root:step /etc/step-ca/secrets/yubikey-pin"'
 ```
 
 Enable and start:
@@ -439,27 +424,33 @@ step ca health --ca-url https://192.168.10.37:8443 --root /path/to/root_ca.crt
 ### 6.1 Health check
 
 ```bash
-# From your workstation
-step ca health --ca-url https://192.168.10.37:8443 --root infra/tinyca/pki/root_ca.crt
+# From your workstation — extract root cert first
+SOPS_AGE_KEY_FILE=key.txt.secret sops --decrypt --extract '["root_ca_crt"]' \
+  infra/tinyca/pki/pki-export/pki-export.sops.yaml > /tmp/root_ca.crt
+step ca health --ca-url https://192.168.10.37:8443 --root /tmp/root_ca.crt
 # Expected: {"status":"ok"}
+rm /tmp/root_ca.crt
 ```
 
 ### 6.2 Issue a test certificate
 
 ```bash
+SOPS_AGE_KEY_FILE=key.txt.secret sops --decrypt --extract '["root_ca_crt"]' \
+  infra/tinyca/pki/pki-export/pki-export.sops.yaml > /tmp/root_ca.crt
+
 step ca certificate "test.homelab.internal" test.crt test.key \
   --ca-url https://192.168.10.37:8443 \
-  --root infra/tinyca/pki/root_ca.crt \
+  --root /tmp/root_ca.crt \
   --provisioner acme \
   --san test.homelab.internal
 
 # Inspect it
 step certificate inspect test.crt
 # Verify chain
-openssl verify -CAfile infra/tinyca/pki/root_ca.crt test.crt
+openssl verify -CAfile /tmp/root_ca.crt test.crt
 
 # Cleanup
-rm test.crt test.key
+rm test.crt test.key /tmp/root_ca.crt
 ```
 
 ### 6.3 ACME directory endpoint
@@ -479,13 +470,18 @@ tinyca.homelab.internal → 192.168.10.37
 
 ## Post-Setup: Distribute Root CA
 
-Once step-ca is verified, distribute `root_ca.crt` everywhere:
+Once step-ca is verified, distribute `root_ca.crt` everywhere. Extract it from SOPS first:
 
 ```bash
+SOPS_AGE_KEY_FILE=key.txt.secret sops --decrypt --extract '["root_ca_crt"]' \
+  infra/tinyca/pki/pki-export/pki-export.sops.yaml > /tmp/root_ca.crt
+
 # 1. Talos machine config patch (infra/talos/patches/custom-ca.yaml)
 # 2. cert-manager ClusterIssuer CA bundle (base64 encode root_ca.crt)
 # 3. Istio cacerts secret
 # See infra/talos/ and gitops/ for integration details
+
+rm /tmp/root_ca.crt
 ```
 
 ---

@@ -56,9 +56,9 @@ Step-CA (smallstep) certificate authority setup on Raspberry Pi, serving as the 
 
 ## Network Configuration
 
-- **IP Address**: 192.168.1.x (static, TBD)
-- **Port**: 9000 (HTTPS)
-- **Access**: Reachable from Talos nodes and cluster pods
+- **IP Address**: `192.168.10.37` (static, Management VLAN 10)
+- **Port**: `8443` (HTTPS)
+- **Access**: Reachable from Management, Internal (VLAN 30), and DMZ (VLAN 20) via OPNsense firewall rules
 
 ## Integration with Cluster
 
@@ -92,13 +92,17 @@ Hardware random number generator for enhanced entropy generation (feeds `/dev/ra
 ## Secrets & SSH Key Recovery
 
 The tinyca admin SSH keypair is stored encrypted in `pki/secrets.sops.yaml` (SOPS + age).
+PKI certificates and private keys are stored encrypted in `pki/pki-export/pki-export.sops.yaml`.
 
 **Prerequisites**: the age private key at `key.txt.secret` in the repo root.
 
-### View decrypted secrets
-
 ```bash
-SOPS_AGE_KEY_FILE=key.txt.secret sops --decrypt infra/tinyca/pki/secrets.sops.yaml
+# View decrypted PKI certs/keys
+SOPS_AGE_KEY_FILE=key.txt.secret sops --decrypt infra/tinyca/pki/pki-export/pki-export.sops.yaml
+
+# Extract root CA cert (e.g. for distribution)
+SOPS_AGE_KEY_FILE=key.txt.secret sops --decrypt --extract '["root_ca_crt"]' \
+  infra/tinyca/pki/pki-export/pki-export.sops.yaml > root_ca.crt
 ```
 
 ### Restore SSH key files
@@ -121,6 +125,20 @@ Load the key into your password manager / SSH agent however you normally would.
 
 ## Setup Status
 
-**Status**: Configured and operational (following Smallstep guide)
+**Status**: PKI initialized — step-ca service configuration in progress.
 
-See [Architecture Documentation](../docs/ARCHITECTURE.md) for the complete PKI design and integration details.
+Completed:
+- ✅ RPi 5 bootstrapped (Ubuntu 24.04, user `zmynx`, step v0.30.2, YubiKey libs, ufw)
+- ✅ YubiKey PIV reset and reconfigured (PIN/PUK/AES256 management key)
+- ✅ Root CA (EC P-384, 10y) and Intermediate CA (EC P-384, 5y) generated via `pki-init.sh`
+- ✅ Both CA keys imported into YubiKey PIV slots 9a / 9c
+- ✅ Certs and keys backed up to password manager and encrypted in `pki/pki-export/pki-export.sops.yaml`
+- ✅ Private keys shredded from RPi disk
+
+Remaining:
+- ⏳ Configure step-ca (`ca.json`) to use YubiKey PKCS#11
+- ⏳ Install and start `step-ca.service`
+- ⏳ Add OPNsense firewall rules
+- ⏳ Migrate RPi port to VLAN 10, update netplan
+- ⏳ Add AdGuard DNS entry
+- ⏳ Distribute root CA to Talos / cert-manager / Istio
