@@ -300,13 +300,15 @@ Public DNS (Cloudflare 1.1.1.1, Quad9 9.9.9.9)
 ## Planned Features
 
 ### IPS/IDS (Intrusion Prevention/Detection System)
-- **Planned**: Suricata or Snort integration
+- **Planned**: Suricata IDS integration
 - **Purpose**: Real-time threat detection and prevention
 - **Features**:
   - Signature-based detection
   - Anomaly detection
   - Protocol analysis
   - Automatic blocking of malicious traffic
+
+See [QFEEDS_IDS_SETUP.md](./QFEEDS_IDS_SETUP.md) for the operational checklist and rule placement guidance.
 
 ### Threat Intelligence Feeds
 - **Planned**: q-feeds integration

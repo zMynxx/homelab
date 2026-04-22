@@ -91,11 +91,23 @@ homelab/
 
 ### Rules
 1. **Never commit plaintext secrets** — no passwords, tokens, keys, or certificates in Git.
-2. **Terraform secrets** → `.tfvars` files (gitignored).
-3. **Ansible secrets** → `ansible-vault` encrypted files or `.secret` files (gitignored).
-4. **Kubernetes secrets** → SealedSecrets or ExternalSecrets (never raw `kind: Secret` in Git).
-5. **Certificates** → Private keys never in Git. Public certs (CA bundle) are acceptable.
-6. If a file path contains `secret`, `credential`, `password`, `token`, or `key` — **do not commit it**.
+2. **SOPS-encrypted secrets** (`*.sops.yaml`) → safe to commit. Encrypted with age post-quantum key (ML-KEM + X25519).
+3. **Terraform secrets** → `.tfvars` files (gitignored).
+4. **Ansible secrets** → `ansible-vault` encrypted files or `.secret` files (gitignored).
+5. **Kubernetes secrets** → SOPS-encrypted `*.sops.yaml` manifests (never raw `kind: Secret` in Git).
+6. **Certificates** → Private keys never in Git. Public certs (CA bundle) are acceptable.
+7. If a file path contains `secret`, `credential`, `password`, `token`, or `key` — **do not commit it** unless it matches `*.sops.*`.
+
+### SOPS + age
+
+- **Config**: `.sops.yaml` at repo root — defines age recipient for each path pattern.
+- **Private key**: `key.txt.secret` (gitignored). Store at `~/.config/sops/age/keys.txt` on each machine.
+- **Naming**: secrets files use `*.sops.yaml` suffix so `.sops.yaml` creation rules auto-apply.
+- **Encrypt**: `just sops-encrypt <file>` — encrypts in-place.
+- **Decrypt**: `just sops-decrypt <file>` — decrypts to stdout.
+- **Edit**: `just sops-edit <file>` — decrypt → `$EDITOR` → re-encrypt on save.
+- **Key rotation**: `sops updatekeys <file>` after updating recipient in `.sops.yaml`.
+- Full workflow documented in `gitops/README.md`.
 
 ## YAML Style Guide
 

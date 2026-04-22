@@ -20,12 +20,21 @@ See [NETWORK_SETUP.md](./NETWORK_SETUP.md) for complete network architecture doc
 | 20 | DMZ (Public) | 192.168.20.0/24 | .100-.200 | 192.168.20.1 |
 | 30 | Internal Apps | 192.168.30.0/24 | .100-.200 | 192.168.30.1 |
 
+## Hardening
+
+- ✅ VLAN segmentation (Management / DMZ / Internal)
+- ✅ 2FA on OPNsense
+- ✅ SSH key-based access
+- ✅ Threat feeds (q-feeds) — `Ingress QFeeds` BLOCK rules active on WAN, LAN, VLAN 20, VLAN 30
+- ✅ IDS (Suricata) — detection mode on WAN, 21 rulesets (ET Open + abuse.ch)
+
 ## Planned Features
 
-- ⏳ IPS/IDS (Suricata/Snort)
-- ⏳ Threat feeds (q-feeds)
+- ⏳ IPS/IDS (Suricata)
 - ⏳ HAProxy reverse proxy
 - ⏳ VPN (WireGuard/IPsec)
+
+See [QFEEDS_IDS_SETUP.md](./QFEEDS_IDS_SETUP.md) for the firewall-side setup guide and verification checklist.
 
 ## Configuration
 
