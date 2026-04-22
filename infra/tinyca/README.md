@@ -89,6 +89,36 @@ This setup follows the official Smallstep guide:
 
 Hardware random number generator for enhanced entropy generation (feeds `/dev/random`).
 
+## Secrets & SSH Key Recovery
+
+The tinyca admin SSH keypair is stored encrypted in `pki/secrets.sops.yaml` (SOPS + age).
+
+**Prerequisites**: the age private key at `key.txt.secret` in the repo root.
+
+### View decrypted secrets
+
+```bash
+SOPS_AGE_KEY_FILE=key.txt.secret sops --decrypt infra/tinyca/pki/secrets.sops.yaml
+```
+
+### Restore SSH key files
+
+```bash
+# Private key
+SOPS_AGE_KEY_FILE=key.txt.secret sops --decrypt --extract '["ssh_private_key"]' \
+  infra/tinyca/pki/secrets.sops.yaml > ~/.ssh/tinyca_ed25519
+chmod 600 ~/.ssh/tinyca_ed25519
+
+# Public key (optional — derivable from private key via `ssh-keygen -y -f`)
+SOPS_AGE_KEY_FILE=key.txt.secret sops --decrypt --extract '["ssh_public_key"]' \
+  infra/tinyca/pki/secrets.sops.yaml > ~/.ssh/tinyca_ed25519.pub
+```
+
+Load the key into your password manager / SSH agent however you normally would.
+
+> **Note**: `key.txt.secret` is gitignored and lives only at the repo root. Never copy it to
+> `~/.config/sops/age/keys.txt` — always pass it explicitly via `SOPS_AGE_KEY_FILE`.
+
 ## Setup Status
 
 **Status**: Configured and operational (following Smallstep guide)
