@@ -14,8 +14,8 @@
 set -euo pipefail
 
 # ── Config ────────────────────────────────────────────────────────────────────
-STEPCA_VERSION="0.27.4"     # https://github.com/smallstep/certificates/releases
-STEP_VERSION="0.27.4"       # https://github.com/smallstep/cli/releases
+STEPCA_VERSION="0.30.2"     # https://github.com/smallstep/certificates/releases
+STEP_VERSION="0.30.2"       # https://github.com/smallstep/cli/releases
 STEPPATH="/etc/step-ca"
 STEPCA_USER="step"
 TIMEZONE="Asia/Jerusalem"
@@ -56,7 +56,6 @@ apt-get install -y -qq \
   libpcsclite-dev \
   yubikey-manager \
   ykcs11 \
-  libykcs11-1 \
   ufw \
   unattended-upgrades \
   apt-listchanges
@@ -70,30 +69,25 @@ Unattended-Upgrade::Automatic-Reboot "false";
 EOF
 
 # ── 2. Install step CLI ───────────────────────────────────────────────────────
-STEP_DEB="step_linux_${STEP_VERSION}_arm64.deb"
+STEP_DEB="step-cli_${STEP_VERSION}-1_arm64.deb"
 info "Downloading step CLI v${STEP_VERSION}"
-wget -q "https://dl.smallstep.com/cli/docs-cli-install/${STEP_VERSION}/${STEP_DEB}" \
+wget -q "https://github.com/smallstep/cli/releases/download/v${STEP_VERSION}/${STEP_DEB}" \
   -O "/tmp/${STEP_DEB}"
 dpkg -i "/tmp/${STEP_DEB}"
 rm "/tmp/${STEP_DEB}"
 step version
 
 # ── 3. Install step-ca ────────────────────────────────────────────────────────
-# step-ca must be built with YubiKey (PKCS#11) support.
-# The official release builds include it; verify with `step-ca --help | grep yubikey`
-STEPCA_DEB="step-ca_linux_${STEPCA_VERSION}_arm64.deb"
+STEPCA_DEB="step-ca_${STEPCA_VERSION}-1_arm64.deb"
 info "Downloading step-ca v${STEPCA_VERSION}"
-wget -q "https://dl.smallstep.com/certificates/docs-ca-install/${STEPCA_VERSION}/${STEPCA_DEB}" \
+wget -q "https://github.com/smallstep/certificates/releases/download/v${STEPCA_VERSION}/${STEPCA_DEB}" \
   -O "/tmp/${STEPCA_DEB}"
 dpkg -i "/tmp/${STEPCA_DEB}"
 rm "/tmp/${STEPCA_DEB}"
 step-ca version
 
-# Verify YubiKey support is compiled in
-if step-ca --help 2>&1 | grep -q "yubikey\|kms"; then
-  info "step-ca YubiKey/KMS support confirmed"
-else
-  warn "Could not confirm YubiKey support in step-ca. Check build flags."
+if step-ca version 2>&1 | grep -qi "GOVERSION\|go[0-9]"; then
+  info "step-ca installed: $(step-ca version 2>&1 | head -1)"
 fi
 
 # ── 4. PKCS#11 library symlink ────────────────────────────────────────────────
@@ -113,8 +107,13 @@ if ! id "$STEPCA_USER" &>/dev/null; then
   useradd --system --shell /bin/false --home-dir "$STEPPATH" --create-home "$STEPCA_USER"
 fi
 
-# Add step user to pcscd group so it can access YubiKey
-usermod -aG pcscd "$STEPCA_USER" 2>/dev/null || true
+usermod -aG plugdev "$STEPCA_USER" 2>/dev/null || true
+
+ADMIN_USER="${SUDO_USER:-}"
+if [[ -n "$ADMIN_USER" ]] && id "$ADMIN_USER" &>/dev/null; then
+  usermod -aG plugdev "$ADMIN_USER"
+  info "Added ${ADMIN_USER} to plugdev group (re-login required)"
+fi
 
 info "Creating STEPPATH directories"
 mkdir -p "${STEPPATH}/certs"
@@ -130,14 +129,26 @@ info "Enabling and starting pcscd"
 systemctl enable pcscd
 systemctl start pcscd
 
+cat > /etc/polkit-1/rules.d/99-pcscd.rules <<'EOF'
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.debian.pcsc-lite.access_pcsc" &&
+        subject.isInGroup("plugdev")) {
+        return polkit.Result.YES;
+    }
+});
+EOF
+systemctl restart polkit
+
 # ── 7. ufw firewall ───────────────────────────────────────────────────────────
 info "Configuring ufw firewall"
 ufw --force reset
 ufw default deny incoming
 ufw default allow outgoing
 
-# SSH — restrict to Management VLAN only
+# SSH — Management VLAN (permanent) + Legacy LAN (temporary, bootstrap only)
+# TODO: remove the 192.168.1.0/24 rule after migrating to VLAN 10 (192.168.10.37)
 ufw allow from 192.168.10.0/24 to any port 22 proto tcp comment "SSH from Management VLAN"
+ufw allow from 192.168.1.0/24  to any port 22 proto tcp comment "SSH from Legacy LAN (temp bootstrap - remove after VLAN migration)"
 
 # step-ca ACME — Management, Internal, DMZ, Legacy LAN
 ufw allow from 192.168.10.0/24 to any port 8443 proto tcp comment "step-ca from Management VLAN"
@@ -151,8 +162,7 @@ ufw status verbose
 # ── 8. Udev rule for YubiKey ──────────────────────────────────────────────────
 info "Adding udev rule for YubiKey"
 cat > /etc/udev/rules.d/70-yubikey.rules <<'EOF'
-# YubiKey — allow pcscd group access
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1050", MODE="0664", GROUP="pcscd"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1050", MODE="0664", GROUP="plugdev"
 EOF
 udevadm control --reload-rules
 udevadm trigger
