@@ -1,0 +1,40 @@
+---
+cluster:
+  apiServer:
+    # NOTE: Server-Side Apply is GA and always enabled in K8s 1.22+; the
+    # ServerSideApply feature gate was removed, so do NOT pass it as a feature
+    # gate (the apiserver refuses to start on an unknown feature gate).
+    extraArgs: {}
+    # Admission plugins — PodSecurity is on by default in K8s 1.25+
+    admissionControl:
+      - name: PodSecurity
+        configuration:
+          apiVersion: pod-security.admission.config.k8s.io/v1alpha1
+          kind: PodSecurityConfiguration
+          defaults:
+            enforce: baseline
+            enforce-version: latest
+            audit: restricted
+            audit-version: latest
+            warn: restricted
+            warn-version: latest
+          exemptions:
+            namespaces:
+              # NOTE: kube-system is exempted by Talos's default PodSecurity
+              # config; listing it again here causes a "Duplicate value"
+              # validation error (patch merges, not replaces).
+              - istio-system
+              - cilium
+              - cert-manager
+              - spegel
+              - registry
+              - kyverno
+              - monitoring
+              - argocd
+            runtimeClasses: []
+            usernames: []
+
+  etcd:
+    # Expose etcd metrics on a dedicated port (used by Prometheus later)
+    extraArgs:
+      listen-metrics-urls: http://0.0.0.0:2381

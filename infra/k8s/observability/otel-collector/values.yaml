@@ -1,0 +1,259 @@
+# OpenTelemetry Collector — DaemonSet
+# Runs on every node to collect: pod logs (filelog), node/pod metrics (kubeletstats),
+# cluster-level metrics (k8s_cluster, leader-elected), Cilium + istiod Prometheus scrapes,
+# and OTLP traces from Istio.
+#
+# Exports to:
+#   metrics → VictoriaMetrics (Prometheus remote write)
+#   logs    → VictoriaLogs (OTLP/HTTP)
+#   traces  → Tempo (OTLP/gRPC)
+
+image:
+  repository: otel/opentelemetry-collector-contrib
+
+mode: daemonset
+
+clusterRole:
+  create: true
+  rules:
+    - apiGroups: [""]
+      resources: [nodes, nodes/metrics, nodes/proxy, services, endpoints, pods]
+      verbs: [get, list, watch]
+    - apiGroups: [apps]
+      resources: [replicasets]
+      verbs: [get, list, watch]
+    - nonResourceURLs: [/metrics, /metrics/cadvisor]
+      verbs: [get]
+
+# Root required for /var/log/pods access
+securityContext:
+  runAsUser: 0
+  runAsGroup: 0
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 400Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Expose OTLP ports for Istio traces
+ports:
+  otlp:
+    enabled: true
+    containerPort: 4317
+    servicePort: 4317
+    protocol: TCP
+  otlp-http:
+    enabled: true
+    containerPort: 4318
+    servicePort: 4318
+    protocol: TCP
+
+extraEnvs:
+  - name: K8S_NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
+
+extraVolumeMounts:
+  - name: varlogpods
+    mountPath: /var/log/pods
+    readOnly: true
+
+extraVolumes:
+  - name: varlogpods
+    hostPath:
+      path: /var/log/pods
+
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+    kubeletstats:
+      collection_interval: 30s
+      auth_type: serviceAccount
+      endpoint: "https://${env:K8S_NODE_NAME}:10250"
+      insecure_skip_verify: true
+      metric_groups:
+        - node
+        - pod
+        - container
+
+    # Leader-elected: only one pod collects cluster-level metrics.
+    k8s_cluster:
+      collection_interval: 30s
+      node_conditions_to_report: [Ready, MemoryPressure, DiskPressure]
+      allocatable_types_to_report: [cpu, memory, storage]
+
+    filelog:
+      include:
+        - /var/log/pods/*/*/*.log
+      include_file_path: true
+      include_file_name: false
+      operators:
+        - type: router
+          id: get-format
+          routes:
+            - output: parser-containerd
+              expr: 'body matches "^[^ ]+ (stdout|stderr)"'
+            - output: parser-docker
+              expr: "true"
+        - type: json_parser
+          id: parser-docker
+          output: extract-metadata
+        - type: regex_parser
+          id: parser-containerd
+          regex: '^(?P<time>[^ Z]+Z) (?P<stream>stdout|stderr) [^ ]* ?(?P<log>.*)$'
+          output: extract-metadata
+          timestamp:
+            parse_from: attributes.time
+            layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+        - type: regex_parser
+          id: extract-metadata
+          regex: '^.*\/(?P<namespace>[^_]+)_(?P<pod>[^_]+)_[^\/]+\/(?P<container>[^\._]+)\/\d+\.log$'
+          parse_from: attributes["log.file.path"]
+          cache:
+            size: 128
+        - type: move
+          from: attributes.log
+          to: body
+        - type: move
+          from: attributes.stream
+          to: attributes["log.iostream"]
+        - type: move
+          from: attributes.container
+          to: resource["k8s.container.name"]
+        - type: move
+          from: attributes.namespace
+          to: resource["k8s.namespace.name"]
+        - type: move
+          from: attributes.pod
+          to: resource["k8s.pod.name"]
+
+    prometheus:
+      config:
+        scrape_configs:
+          - job_name: cilium-agent
+            scrape_interval: 30s
+            kubernetes_sd_configs:
+              - role: pod
+                namespaces:
+                  names: [kube-system]
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_label_k8s_app]
+                action: keep
+                regex: cilium
+              - source_labels: [__meta_kubernetes_pod_ip]
+                replacement: "$1:9962"
+                target_label: __address__
+            metric_relabel_configs:
+              - source_labels: [__name__]
+                regex: "cilium_.*"
+                action: keep
+
+          - job_name: istiod
+            scrape_interval: 30s
+            kubernetes_sd_configs:
+              - role: pod
+                namespaces:
+                  names: [istio-system]
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_label_app]
+                action: keep
+                regex: istiod
+              - source_labels: [__meta_kubernetes_pod_ip]
+                replacement: "$1:15014"
+                target_label: __address__
+
+          - job_name: ztunnel
+            scrape_interval: 30s
+            kubernetes_sd_configs:
+              - role: pod
+                namespaces:
+                  names: [istio-system]
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_label_app]
+                action: keep
+                regex: ztunnel
+              - source_labels: [__meta_kubernetes_pod_ip]
+                replacement: "$1:15020"
+                target_label: __address__
+
+  processors:
+    memory_limiter:
+      check_interval: 5s
+      limit_percentage: 80
+      spike_limit_percentage: 25
+
+    batch:
+      send_batch_size: 10000
+      timeout: 10s
+
+    k8sattributes:
+      auth_type: serviceAccount
+      passthrough: false
+      filter:
+        node_from_env_var: K8S_NODE_NAME
+      extract:
+        metadata:
+          - k8s.pod.name
+          - k8s.pod.uid
+          - k8s.deployment.name
+          - k8s.namespace.name
+          - k8s.node.name
+          - k8s.pod.start_time
+      pod_association:
+        - sources:
+            - from: resource_attribute
+              name: k8s.pod.ip
+        - sources:
+            - from: resource_attribute
+              name: k8s.pod.uid
+        - sources:
+            - from: connection
+
+    resource:
+      attributes:
+        - key: cluster
+          value: turingpi
+          action: upsert
+
+  exporters:
+    prometheusremotewrite:
+      endpoint: http://victoria-metrics-single-server.monitoring.svc.cluster.local:8428/api/v1/write
+      tls:
+        insecure: true
+
+    otlphttp/victorialogs:
+      endpoint: http://victoria-logs-single-server.monitoring.svc.cluster.local:9428/insert/opentelemetry
+      tls:
+        insecure: true
+
+    otlp/tempo:
+      endpoint: tempo.monitoring.svc.cluster.local:4317
+      tls:
+        insecure: true
+
+  service:
+    pipelines:
+      metrics:
+        receivers: [otlp, kubeletstats, k8s_cluster, prometheus]
+        processors: [memory_limiter, k8sattributes, resource, batch]
+        exporters: [prometheusremotewrite]
+
+      logs:
+        receivers: [otlp, filelog]
+        processors: [memory_limiter, k8sattributes, resource, batch]
+        exporters: [otlphttp/victorialogs]
+
+      traces:
+        receivers: [otlp]
+        processors: [memory_limiter, k8sattributes, resource, batch]
+        exporters: [otlp/tempo]

@@ -1,0 +1,67 @@
+---
+# Permanent fix for turingpi-4 Longhorn engine binary split-namespace issue.
+#
+# Root cause: On turingpi-4 the NVMe (/dev/nvme0n1) is mounted at /var/lib/longhorn
+# on the HOST, but the kubelet runs in an isolated mount namespace where /var/lib/longhorn
+# is the SD card. The engine-image DaemonSet (no mountPropagation) writes the binary into
+# the SD card view. The instance-manager uses HostToContainer and reads from the HOST NVMe
+# view. They disagree, so the binary is invisible to the instance-manager.
+#
+# Fix: This DaemonSet runs on turingpi-4 with privileged + Bidirectional mount propagation,
+# which escapes the kubelet namespace and writes directly to the HOST (NVMe) filesystem —
+# the same view the instance-manager reads from.
+#
+# On Longhorn version upgrades: update the image tag AND the hostPath version suffix below.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: longhorn-engine-binary-sync
+  namespace: longhorn-system
+  labels:
+    app: longhorn-engine-binary-sync
+spec:
+  selector:
+    matchLabels:
+      app: longhorn-engine-binary-sync
+  template:
+    metadata:
+      labels:
+        app: longhorn-engine-binary-sync
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: turingpi-4
+      tolerations:
+        - operator: Exists
+      priorityClassName: system-node-critical
+      initContainers:
+        - name: copy-engine-binary
+          image: docker.io/longhornio/longhorn-engine:v1.12.1
+          command:
+            - sh
+            - -c
+            - |
+              if [ -f /host-engine-binaries/longhorn ]; then
+                echo "Binary already present, skipping copy"
+              else
+                echo "Copying engine binary to NVMe host namespace..."
+                cp /usr/local/bin/longhorn /host-engine-binaries/longhorn
+                echo "Done: $(ls -lh /host-engine-binaries/longhorn)"
+              fi
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: engine-binaries
+              mountPath: /host-engine-binaries
+              mountPropagation: Bidirectional
+      containers:
+        - name: pause
+          image: gcr.io/google_containers/pause:3.1
+          resources:
+            requests:
+              cpu: 1m
+              memory: 4Mi
+      volumes:
+        - name: engine-binaries
+          hostPath:
+            path: /var/lib/longhorn/engine-binaries/docker.io-longhornio-longhorn-engine-v1.12.1
+            type: DirectoryOrCreate

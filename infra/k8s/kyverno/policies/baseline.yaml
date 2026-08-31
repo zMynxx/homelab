@@ -1,0 +1,159 @@
+---
+# Require non-root users in all containers (CKS baseline).
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-non-root
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: check-runasnonroot
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Running as root is not allowed."
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+            containers:
+              - securityContext:
+                  runAsNonRoot: true
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - disk-wipe
+                - kube-system
+                - cert-manager
+                - istio-system
+                - cilium
+                - spegel
+                - registry
+                - kyverno
+                - longhorn-system
+                - longhorn-mount
+                - monitoring
+                - argocd
+---
+# Disallow privileged containers.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privileged
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: check-privileged
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Privileged containers are not allowed."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  privileged: false
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - disk-wipe
+                - kube-system
+                - cert-manager
+                - istio-system
+                - cilium
+                - spegel
+                - registry
+                - kyverno
+                - longhorn-system
+                - longhorn-mount
+                - monitoring
+                - argocd
+---
+# Block the :latest tag to force immutable image references.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: check-image-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Use an explicit image tag (not :latest)."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+---
+# Require CPU/memory resource limits on all containers.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-limits
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: check-limits
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "CPU and memory limits are required."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  limits:
+                    memory: "?*"
+                    cpu: "?*"
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - disk-wipe
+                - kube-system
+                - cert-manager
+                - istio-system
+                - cilium
+                - spegel
+                - registry
+                - kyverno
+                - longhorn-system
+                - longhorn-mount
+                - monitoring
+                - argocd
+---
+# Disallow NodePort services (ingress must go through Istio Gateway).
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-nodeport
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: check-nodeport
+      match:
+        any:
+          - resources:
+              kinds:
+                - Service
+      validate:
+        message: "NodePort services are not allowed."
+        pattern:
+          spec:
+            type: "!NodePort"

@@ -1,0 +1,145 @@
+# Cilium Helm values for Talos on Turing Pi 2 (RK1 nodes)
+# Works with Cilium 1.20.1, Talos 1.13.6, Kubernetes 1.36.2
+# kube-proxy is disabled in Talos; Cilium replaces it via eBPF.
+# Istio Ambient runs alongside via istio-cni (non-exclusive CNI mode).
+
+# === Cluster Configuration ===
+clusterName: turingpi
+clusterID: 1
+
+# === Kubernetes API ===
+k8sServiceHost: 192.168.30.99  # VIP
+k8sServicePort: 6443
+
+# === kube-proxy Replacement ===
+# Talos disables kube-proxy (cluster.proxy.disabled: true), so Cilium must own
+# service routing. "true" enables full eBPF replacement.
+kubeProxyReplacement: true
+
+# === Networking ===
+ipam:
+  mode: kubernetes
+routingMode: native
+autoDirectNodeRoutes: true
+ipv4NativeRoutingCIDR: 10.244.0.0/16
+enableIPv4: true
+enableIPv6: false
+
+# === BPF / Datapath ===
+bpf:
+  # BPF masquerade DISABLED: Istio Ambient health checks fail when BPF masquerade
+  # is active because ztunnel's TPROXY mark is rewritten. iptables masquerade
+  # (enableIPv4Masquerade: true below) handles SNAT instead.
+  masquerade: false
+  datapathMode: veth
+
+# === Socket Load Balancer ===
+# hostNamespaceOnly: true prevents Cilium's socket-level LB from intercepting
+# connections inside Pods, which would bypass ztunnel and break Ambient mTLS.
+socketLB:
+  enabled: true
+  hostNamespaceOnly: true
+
+# === CNI ===
+# exclusive: false lets istio-cni install its own plugin alongside Cilium
+# without chaining (Istio Ambient uses a separate plugin, not chaining).
+cni:
+  exclusive: false
+
+# === Masquerade / NAT ===
+enableIPv4Masquerade: true
+enableIPv6Masquerade: false
+
+# === Features ===
+# l7Proxy disabled: Istio handles L7 policy; Cilium operates at L3/L4 only.
+l7Proxy: false
+enableHealthCheckNodePort: true
+enableHealthCheckLoadBalancerIP: false
+enableNodePort: true
+enableExternalIPs: true
+enableHostPort: true
+healthCheckICMPFailureThreshold: 3
+
+# === Security (Talos requires privileged for BPF operations) ===
+securityContext:
+  privileged: true
+  capabilities:
+    ciliumAgent:
+      - CHOWN
+      - KILL
+      - NET_ADMIN
+      - NET_RAW
+      - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    cleanCiliumState:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+
+# === cgroup (Talos manages cgroups) ===
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+
+# === Hubble (Observability) ===
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  metrics:
+    enabled:
+      - dns
+      - drop
+      - tcp
+      - flow
+      - icmp
+      - http
+
+# === Operator ===
+operator:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# === Agent Resources ===
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+# === Rollout / Updates ===
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+
+# === Prometheus / Metrics ===
+prometheus:
+  enabled: true
+  serviceMonitor:
+    enabled: false  # No Prometheus Operator installed yet
+
+# === Node Init (not needed on Talos) ===
+nodeinit:
+  enabled: false

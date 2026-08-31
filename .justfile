@@ -1,5 +1,8 @@
 #!/usr/bin/env just --justfile
 
+import 'just/talos.just'
+import 'just/observability.just'
+
 # default recipe to display help information
 default:
 	@echo "-=== Easy Managment Using Justfile ===-"

@@ -1,0 +1,51 @@
+# Mounts the dedicated NVMe (nvme0n1) at /var/lib/longhorn (Longhorn's default
+# data path) in the HOST mount namespace, so Longhorn (hostPath) sees it.
+# Talos's UserVolumeConfig is non-functional on this build, so we do it here.
+# Idempotent + reboot-safe: mounts existing xfs, otherwise mkfs then mounts.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: longhorn-disk-mount
+  namespace: longhorn-mount
+spec:
+  selector:
+    matchLabels:
+      app: longhorn-disk-mount
+  template:
+    metadata:
+      labels:
+        app: longhorn-disk-mount
+    spec:
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: mount
+          image: longhornio/longhorn-manager:v1.12.1
+          securityContext:
+            privileged: true
+          command:
+            - sh
+            - -c
+            - >-
+              set -e;
+              DEV=/dev/nvme0n1; DST=/host/longhorn;
+              mkdir -p "$DST";
+              if ! grep -q "$DEV $DST" /proc/mounts; then
+                mount "$DEV" "$DST" 2>/dev/null || (mkfs.xfs -f "$DEV" && mount "$DEV" "$DST");
+              fi;
+              echo "MOUNTED-$(hostname)";
+              sleep infinity
+          volumeMounts:
+            - name: host-longhorn
+              mountPath: /host/longhorn
+              mountPropagation: Bidirectional
+            - name: dev
+              mountPath: /dev
+      volumes:
+        - name: host-longhorn
+          hostPath:
+            path: /var/lib/longhorn
+        - name: dev
+          hostPath:
+            path: /dev
+      restartPolicy: Always

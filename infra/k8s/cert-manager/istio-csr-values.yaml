@@ -1,0 +1,25 @@
+app:
+  runtimeConfiguration:
+    create: true
+    issuer:
+      group: cert-manager.io
+      kind: ClusterIssuer
+      name: istio-ca
+    name: istio-csr-config
+  server:
+    caTrustedNodeAccounts: istio-system/ztunnel
+    serving:
+      port: 6443
+  tls:
+    certificateDNSNames:
+    - cert-manager-istio-csr.cert-manager.svc
+    - istio-csr.cert-manager.svc
+    rootCAFile: /var/run/secrets/istio-csr/ca.pem
+    trustDomain: cluster.local
+volumeMounts:
+- mountPath: /var/run/secrets/istio-csr
+  name: root-ca
+volumes:
+- name: root-ca
+  secret:
+    secretName: istio-root-ca

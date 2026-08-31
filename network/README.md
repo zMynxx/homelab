@@ -12,6 +12,9 @@ OPNsense firewall/router configuration and network automation for the homelab.
 
 See [NETWORK_SETUP.md](./NETWORK_SETUP.md) for complete network architecture documentation.
 
+**Switch migration in progress**: moving from the CUDY unmanaged PoE switch to the UniFi
+USW-Flex-2.5G-5 as the main switch. See [UNIFI_MAIN_SWITCH_MIGRATION.md](./UNIFI_MAIN_SWITCH_MIGRATION.md).
+
 ## VLAN Architecture
 
 | VLAN | Purpose | Subnet | DHCP Range | Gateway |

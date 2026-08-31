@@ -1,0 +1,8 @@
+# Mounts the 256 GB NVMe (/dev/nvme0n1) at /var/mnt/longhorn for Longhorn replica data.
+# Keeping replica data separate from /var/lib/longhorn avoids mount propagation conflicts
+# with the engine-image DaemonSet and instance-manager pods.
+machine:
+  disks:
+    - device: /dev/nvme0n1
+      partitions:
+        - mountpoint: /var/mnt/longhorn

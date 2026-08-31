@@ -1,0 +1,128 @@
+# Grafana - unified dashboards for metrics, logs, traces
+# Pinned to turingpi-3 via affinity preference.
+
+persistence:
+  enabled: true
+  storageClassName: longhorn
+  size: 5Gi
+
+adminUser: admin
+# Set GRAFANA_ADMIN_PASSWORD env var or use a Secret to override at deploy time.
+# Default here is intentionally insecure — change before exposing externally.
+adminPassword: homelab-change-me
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: node-role
+              operator: In
+              values:
+                - heavy
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Plugins required for datasources
+plugins:
+  - victoriametrics-logs-datasource
+
+# Pre-configure all three datasources
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: VictoriaMetrics
+        type: prometheus
+        uid: victoria-metrics
+        url: http://victoria-metrics-single-server.monitoring.svc.cluster.local:8428
+        isDefault: true
+        jsonData:
+          httpMethod: POST
+
+      - name: VictoriaLogs
+        type: victoriametrics-logs-datasource
+        uid: victoria-logs
+        url: http://victoria-logs-single-server.monitoring.svc.cluster.local:9428
+        jsonData:
+          httpMethod: GET
+
+      - name: Tempo
+        type: tempo
+        uid: tempo
+        url: http://tempo.monitoring.svc.cluster.local:3200
+        jsonData:
+          tracesToLogsV2:
+            datasourceUid: victoria-logs
+            spanStartTimeShift: "-1h"
+            spanEndTimeShift: "1h"
+          serviceMap:
+            datasourceUid: victoria-metrics
+          nodeGraph:
+            enabled: true
+
+# Dashboard providers
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: kubernetes
+        folder: Kubernetes
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards/kubernetes
+      - name: istio
+        folder: Istio
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards/istio
+      - name: cilium
+        folder: Cilium
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards/cilium
+
+# Import community dashboards by grafana.com ID
+dashboards:
+  kubernetes:
+    k8s-cluster-overview:
+      gnetId: 7249
+      revision: 1
+      datasource: VictoriaMetrics
+    node-exporter-full:
+      gnetId: 1860
+      revision: 37
+      datasource: VictoriaMetrics
+    k8s-pods:
+      gnetId: 6879
+      revision: 1
+      datasource: VictoriaMetrics
+  istio:
+    istio-mesh-dashboard:
+      gnetId: 7639
+      revision: 1
+      datasource: VictoriaMetrics
+    istio-service-dashboard:
+      gnetId: 7636
+      revision: 1
+      datasource: VictoriaMetrics
+  cilium:
+    cilium-agent:
+      gnetId: 16611
+      revision: 1
+      datasource: VictoriaMetrics
+
+grafana.ini:
+  server:
+    domain: grafana.homelab.internal
+  analytics:
+    check_for_updates: false
+  unified_alerting:
+    enabled: true

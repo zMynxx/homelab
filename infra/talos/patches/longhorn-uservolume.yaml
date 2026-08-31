@@ -1,0 +1,14 @@
+# UserVolumeConfig — provisions the dedicated 256 GB NVMe (/dev/nvme0n1) as an
+# XFS volume mounted at /var/mnt/longhorn, which Longhorn uses for replica data.
+# Applied per node with: talosctl -n <IP> --talosconfig <cfg> apply -f <this file>
+# (the iscsi-tools extension is already in the node image, so no rebuild needed).
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: longhorn
+provisioner: disk
+diskSelector:
+  match:
+    systemDisk: false
+mountPoint: /var/mnt/longhorn
+filesystem:
+  type: xfs

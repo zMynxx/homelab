@@ -348,7 +348,7 @@ See [QFEEDS_IDS_SETUP.md](./QFEEDS_IDS_SETUP.md) for the operational checklist a
 ✅ **Firewall rules active** - Guest network isolation enforced  
 
 **Ready to Deploy:**
-🔵 UniFi USW-Flex-2.5G-5 managed switch (physical migration pending)  
+🔵 UniFi USW-Flex-2.5G-5 managed switch (physical migration pending — see [UNIFI_MAIN_SWITCH_MIGRATION.md](./UNIFI_MAIN_SWITCH_MIGRATION.md))  
 
 **In Progress:**
 🟡 **VLAN isolation testing** - Complete test plan in [VLAN_COMPLETION_GUIDE.md](./VLAN_COMPLETION_GUIDE.md)  

@@ -1,0 +1,34 @@
+# VictoriaLogs single-node
+# Pinned to turingpi-3 via affinity preference.
+# Accepts OTLP/JSON from OTel Collector on :9428.
+# Exposes Loki-compatible query API for Grafana.
+
+server:
+  persistentVolume:
+    enabled: true
+    storageClass: longhorn
+    size: 20Gi
+
+  retentionPeriod: "7d"
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node-role
+                operator: In
+                values:
+                  - heavy
+
+  extraArgs:
+    retention.maxDiskSpaceUsageBytes: "15GiB"

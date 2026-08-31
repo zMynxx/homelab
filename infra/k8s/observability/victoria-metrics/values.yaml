@@ -1,0 +1,46 @@
+# VictoriaMetrics single-node
+# Pinned to turingpi-3 (node-role: heavy, 32GB RAM) via affinity preference.
+# Prometheus-compatible remote write endpoint on :8428.
+
+server:
+  persistentVolume:
+    enabled: true
+    storageClass: longhorn
+    size: 20Gi
+
+  retentionPeriod: "90d"
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node-role
+                operator: In
+                values:
+                  - heavy
+
+  # Self-scrape
+  scrape:
+    enabled: true
+    config:
+      scrape_configs:
+        - job_name: victoriametrics
+          static_configs:
+            - targets: ["localhost:8428"]
+
+  extraArgs:
+    promscrape.suppressScrapeErrors: "false"
+
+service:
+  type: ClusterIP
+  servicePort: 8428

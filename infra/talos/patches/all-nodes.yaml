@@ -1,0 +1,53 @@
+---
+# Kernel modules required by Cilium and Istio
+machine:
+  kernel:
+    modules:
+      - name: br_netfilter
+      - name: ip_tables
+      - name: ip6_tables
+      - name: nf_conntrack
+
+  # Sysctl tuning for Cilium eBPF and Istio sidecar traffic volumes
+  sysctls:
+    fs.inotify.max_user_watches: "524288"
+    fs.inotify.max_user_instances: "512"
+    net.core.rmem_max: "134217728"
+    net.core.wmem_max: "134217728"
+    net.core.netdev_max_backlog: "5000"
+
+  # Registry mirror chain: Spegel (P2P) → Zot (in-cluster cache, HTTPS) → upstream
+  # During bootstrap, Spegel and Zot don't exist yet — containerd falls through to upstream.
+  # After bootstrap, all pulls are served from cache.
+  # Zot serves HTTPS with a cert chaining to the Homelab Root CA (machine
+  # trust store via patches/custom-ca.yaml), so containerd validates it natively.
+  registries:
+    mirrors:
+      docker.io:
+        endpoints:
+          - http://localhost:5001
+          - https://zot.registry.svc.cluster.local:5000
+          - https://registry-1.docker.io
+      ghcr.io:
+        endpoints:
+          - http://localhost:5001
+          - https://zot.registry.svc.cluster.local:5000
+          - https://ghcr.io
+      quay.io:
+        endpoints:
+          - http://localhost:5001
+          - https://zot.registry.svc.cluster.local:5000
+          - https://quay.io
+      registry.k8s.io:
+        endpoints:
+          - http://localhost:5001
+          - https://zot.registry.svc.cluster.local:5000
+          - https://registry.k8s.io
+
+# Disable kube-proxy — Cilium replaces it via eBPF.
+# NOTE: forwardKubeDNSToHost is intentionally NOT set here. The running
+# cluster uses the default (true); the previous override at the wrong schema
+# path never applied. Revisit only if Cilium BPF masquerade is enabled later.
+cluster:
+  proxy:
+    disabled: true

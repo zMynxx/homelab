@@ -125,7 +125,7 @@ Load the key into your password manager / SSH agent however you normally would.
 
 ## Setup Status
 
-**Status**: PKI initialized — step-ca service configuration in progress.
+**Status**: Step-CA active on Management VLAN — awaiting cluster-side integration.
 
 Completed:
 - ✅ RPi 5 bootstrapped (Ubuntu 24.04, user `zmynx`, step v0.30.2, YubiKey libs, ufw)
@@ -134,11 +134,15 @@ Completed:
 - ✅ Both CA keys imported into YubiKey PIV slots 9a / 9c
 - ✅ Certs and keys backed up to password manager and encrypted in `pki/pki-export/pki-export.sops.yaml`
 - ✅ Private keys shredded from RPi disk
+- ✅ step-ca configured (`ca.json`) to use YubiKey PKCS#11 and **active** on `192.168.10.37:8443`
+- ✅ step-ca.service installed and running (requires YubiKey presence)
+- ✅ OPNsense firewall rules added (ACME access from Internal/DMZ/LAN)
+- ✅ Migrated RPi to VLAN 10 (Management), netplan updated
+- ✅ AdGuard DNS entry set: `tinyca.opnsense.internal → 192.168.10.37`
+- ✅ Root CA injected into Talos (`infra/talos/patches/custom-ca.yaml`)
 
-Remaining:
-- ⏳ Configure step-ca (`ca.json`) to use YubiKey PKCS#11
-- ⏳ Install and start `step-ca.service`
-- ⏳ Add OPNsense firewall rules
-- ⏳ Migrate RPi port to VLAN 10, update netplan
-- ⏳ Add AdGuard DNS entry
-- ⏳ Distribute root CA to Talos / cert-manager / Istio
+Remaining (cluster-side, blocked on Talos cluster bootstrap):
+- ⏳ Configure cert-manager `ClusterIssuer` to ACME → step-ca
+- ⏳ Wire Istio workload CA (istio-csr) to step-ca
+- ⏳ Verify ACME directory endpoint from each VLAN
+- ⏳ Distribute root CA to any remaining consumers
