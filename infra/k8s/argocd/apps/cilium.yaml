@@ -15,7 +15,7 @@ spec:
       valueFiles:
       - $values/infra/k8s/cilium/values.yaml
   - repoURL: https://github.com/zmynxx/homelab.git
-    targetRevision: feat/talos
+    targetRevision: main
     ref: values
   destination:
     server: https://kubernetes.default.svc

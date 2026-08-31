@@ -15,7 +15,7 @@ spec:
       valueFiles:
       - $values/infra/k8s/observability/otel-collector/values.yaml
   - repoURL: https://github.com/zmynxx/homelab.git
-    targetRevision: feat/talos
+    targetRevision: main
     ref: values
   destination:
     server: https://kubernetes.default.svc
