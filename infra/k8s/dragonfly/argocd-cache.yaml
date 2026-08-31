@@ -1,0 +1,17 @@
+# DragonflyDB cluster used as ArgoCD's Redis cache (Redis-compatible, drop-in)
+# Service: argocd-cache.argocd.svc.cluster.local:6379
+# ArgoCD values: redis.enabled=false, externalRedis.host=argocd-cache
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
+metadata:
+  name: argocd-cache
+  namespace: argocd
+spec:
+  replicas: 3
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

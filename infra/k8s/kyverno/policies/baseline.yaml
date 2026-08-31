@@ -38,6 +38,8 @@ spec:
                 - longhorn-mount
                 - monitoring
                 - argocd
+                - dragonfly-operator-system
+                - cnpg-system
 ---
 # Disallow privileged containers.
 apiVersion: kyverno.io/v1
@@ -76,6 +78,8 @@ spec:
                 - longhorn-mount
                 - monitoring
                 - argocd
+                - dragonfly-operator-system
+                - cnpg-system
 ---
 # Block the :latest tag to force immutable image references.
 apiVersion: kyverno.io/v1
@@ -137,6 +141,8 @@ spec:
                 - longhorn-mount
                 - monitoring
                 - argocd
+                - dragonfly-operator-system
+                - cnpg-system
 ---
 # Disallow NodePort services (ingress must go through Istio Gateway).
 apiVersion: kyverno.io/v1

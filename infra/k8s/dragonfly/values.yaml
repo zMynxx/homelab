@@ -1,0 +1,3 @@
+# DragonflyDB Operator — manages Dragonfly CR instances
+# Helm chart: oci://ghcr.io/dragonflydb/dragonfly-operator/helm v1.6.1
+# Operator deploys to dragonfly-operator-system namespace by default

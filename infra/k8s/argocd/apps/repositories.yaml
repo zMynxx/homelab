@@ -10,3 +10,16 @@ stringData:
   name: spegel-oci
   url: ghcr.io/spegel-org/helm-charts
   enableOCI: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dragonfly-operator-oci-repo
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  type: helm
+  name: dragonfly-operator-oci
+  url: ghcr.io/dragonflydb/dragonfly-operator
+  enableOCI: "true"
