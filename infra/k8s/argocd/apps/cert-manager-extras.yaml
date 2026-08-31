@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/zmynxx/homelab.git
-    targetRevision: HEAD
+    targetRevision: feat/talos
     path: infra/k8s/cert-manager
     directory:
       include: "step-issuer.yaml"

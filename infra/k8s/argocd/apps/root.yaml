@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/zmynxx/homelab.git
-    targetRevision: HEAD
+    targetRevision: feat/talos
     path: infra/k8s/argocd/apps
   destination:
     server: https://kubernetes.default.svc

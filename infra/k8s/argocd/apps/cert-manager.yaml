@@ -15,7 +15,7 @@ spec:
       valueFiles:
       - $values/infra/k8s/cert-manager/values.yaml
   - repoURL: https://github.com/zmynxx/homelab.git
-    targetRevision: HEAD
+    targetRevision: feat/talos
     ref: values
   destination:
     server: https://kubernetes.default.svc
