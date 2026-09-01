@@ -1,15 +1,15 @@
 ---
-# Permanent fix for turingpi-4 Longhorn engine binary split-namespace issue.
+# Permanent fix for Longhorn engine binary split-namespace issue on ALL nodes.
 #
-# Root cause: On turingpi-4 the NVMe (/dev/nvme0n1) is mounted at /var/lib/longhorn
-# on the HOST, but the kubelet runs in an isolated mount namespace where /var/lib/longhorn
-# is the SD card. The engine-image DaemonSet (no mountPropagation) writes the binary into
-# the SD card view. The instance-manager uses HostToContainer and reads from the HOST NVMe
-# view. They disagree, so the binary is invisible to the instance-manager.
+# Root cause: All TuringPi nodes have /dev/nvme0n1 mounted at /var/lib/longhorn on the HOST,
+# but the kubelet runs in an isolated mount namespace where /var/lib/longhorn is the SD card.
+# The engine-image DaemonSet (no mountPropagation) writes the binary into the SD card view.
+# The instance-manager uses HostToContainer and reads from the HOST NVMe view. They disagree,
+# so the binary is invisible to the instance-manager.
 #
-# Fix: This DaemonSet runs on turingpi-4 with privileged + Bidirectional mount propagation,
+# Fix: This DaemonSet runs on all nodes with privileged + Bidirectional mount propagation,
 # which escapes the kubelet namespace and writes directly to the HOST (NVMe) filesystem —
-# the same view the instance-manager reads from.
+# the same view the instance-manager reads from. Idempotent: skips if binary already present.
 #
 # On Longhorn version upgrades: update the image tag AND the hostPath version suffix below.
 apiVersion: apps/v1
@@ -28,8 +28,6 @@ spec:
       labels:
         app: longhorn-engine-binary-sync
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: turingpi-4
       tolerations:
         - operator: Exists
       priorityClassName: system-node-critical
