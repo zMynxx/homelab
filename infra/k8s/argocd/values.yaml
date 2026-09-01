@@ -23,6 +23,10 @@ configs:
     server.insecure: "true"
     # Allow Kustomize exec plugins (needed by ksops)
     kustomize.buildOptions: "--enable-alpha-plugins --enable-exec"
+    # Use bootstrap repo-server and Redis — prevents argocd-self Helm release from
+    # redirecting the main controller to argocd-self-* services on re-sync
+    repo.server: "argocd-repo-server:8081"
+    redis.server: "argocd-redis:6379"
 
   # SOPS CMP plugin: decrypts raw *.sops.yaml Secret manifests
   cmp:
@@ -40,15 +44,6 @@ configs:
                 /usr/local/bin/sops --decrypt "$f"
                 echo "---"
               done
-
-# ── redis — replaced by DragonflyDB (Redis-compatible) ────────────────────────
-# IMPORTANT: sync argocd-self ONLY after dragonfly-argocd-cache Application is Healthy
-redis:
-  enabled: false
-
-externalRedis:
-  host: argocd-cache.argocd.svc.cluster.local
-  port: 6379
 
 # ── repo-server ───────────────────────────────────────────────────────────────
 repoServer:
