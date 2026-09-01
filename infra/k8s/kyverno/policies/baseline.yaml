@@ -40,6 +40,7 @@ spec:
                 - argocd
                 - dragonfly-operator-system
                 - cnpg-system
+                - reloader
 ---
 # Disallow privileged containers.
 apiVersion: kyverno.io/v1
@@ -80,6 +81,7 @@ spec:
                 - argocd
                 - dragonfly-operator-system
                 - cnpg-system
+                - reloader
 ---
 # Block the :latest tag to force immutable image references.
 apiVersion: kyverno.io/v1
@@ -143,6 +145,7 @@ spec:
                 - argocd
                 - dragonfly-operator-system
                 - cnpg-system
+                - reloader
 ---
 # Disallow NodePort services (ingress must go through Istio Gateway).
 apiVersion: kyverno.io/v1
