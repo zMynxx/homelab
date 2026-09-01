@@ -9,16 +9,10 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  sources:
-  - repoURL: ghcr.io/dragonflydb/dragonfly-operator
-    chart: helm
+  source:
+    repoURL: https://github.com/dragonflydb/dragonfly-operator.git
     targetRevision: "v1.6.1"
-    helm:
-      valueFiles:
-      - $values/infra/k8s/dragonfly/values.yaml
-  - repoURL: https://github.com/zMynxx/homelab.git
-    targetRevision: main
-    ref: values
+    path: charts/dragonfly-operator
   destination:
     server: https://kubernetes.default.svc
     namespace: dragonfly-operator-system
