@@ -30,6 +30,9 @@ spec:
                 - longhorn-system
                 - longhorn-mount
       mutate:
+        targets:
+          - apiVersion: v1
+            kind: Namespace
         patchStrategicMerge:
           metadata:
             labels:
