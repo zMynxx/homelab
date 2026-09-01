@@ -1,4 +1,9 @@
 app:
+  certmanager:
+    issuer:
+      kind: ClusterIssuer
+      name: istio-ca
+      group: cert-manager.io
   runtimeConfiguration:
     create: true
     issuer:
