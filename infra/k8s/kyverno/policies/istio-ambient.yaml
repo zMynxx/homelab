@@ -1,0 +1,36 @@
+---
+# Automatically enroll namespaces in Istio Ambient mesh (mTLS via ztunnel).
+# Excluded: Kubernetes internals, Istio control plane, Cilium, Kyverno (webhook timing),
+# and Longhorn (iSCSI/gRPC internal networking).
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-istio-ambient-label
+  annotations:
+    policies.kyverno.io/mutateExistingOnPolicyUpdate: "true"
+spec:
+  mutateExistingOnPolicyUpdate: true
+  rules:
+    - name: add-ambient-label
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+      exclude:
+        any:
+          - resources:
+              names:
+                - kube-system
+                - kube-public
+                - kube-node-lease
+                - istio-system
+                - cilium-secrets
+                - kyverno
+                - longhorn-system
+                - longhorn-mount
+      mutate:
+        patchStrategicMerge:
+          metadata:
+            labels:
+              istio.io/dataplane-mode: ambient
