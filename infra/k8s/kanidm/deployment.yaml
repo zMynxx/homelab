@@ -23,9 +23,6 @@ spec:
       containers:
         - name: kanidm
           image: kanidm/server:1.4.3
-          env:
-            - name: KANIDM_CONFIG
-              value: /etc/kanidm/server.toml
           ports:
             - name: https
               containerPort: 8443
@@ -33,7 +30,7 @@ spec:
               containerPort: 3636
           volumeMounts:
             - name: config
-              mountPath: /etc/kanidm/server.toml
+              mountPath: /data/server.toml
               subPath: server.toml
             - name: data
               mountPath: /data
