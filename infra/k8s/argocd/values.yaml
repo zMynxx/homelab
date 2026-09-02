@@ -21,6 +21,21 @@ global:
   networkPolicy:
     create: false
 
+# Explicitly disable per-component NetworkPolicies (global flag not sufficient
+# in chart v10.x — component-level values override global)
+applicationController:
+  networkPolicy:
+    create: false
+repoServer:
+  networkPolicy:
+    create: false
+server:
+  networkPolicy:
+    create: false
+notifications:
+  networkPolicy:
+    create: false
+
 configs:
   params:
     # TLS terminated by Istio ambient mesh — run server in plain HTTP mode
