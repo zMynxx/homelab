@@ -27,9 +27,9 @@ configs:
     server.insecure: "true"
     # Allow Kustomize exec plugins (needed by ksops)
     kustomize.buildOptions: "--enable-alpha-plugins --enable-exec"
-    # Use bootstrap repo-server — prevents argocd-self Helm release from
-    # redirecting the main controller to argocd-self-repo-server on re-sync
-    repo.server: "argocd-repo-server:8081"
+    # Use self-managed repo-server (healthy) — bootstrap argocd-repo-server
+    # was crashlooping due to liveness probe kills, causing Unknown sync status
+    repo.server: "argocd-self-repo-server:8081"
     # DragonflyDB Redis-compatible cache (3-replica cluster in argocd namespace)
     redis.server: "argocd-cache:6379"
 
