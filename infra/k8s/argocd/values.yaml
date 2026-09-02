@@ -157,6 +157,10 @@ repoServer:
 
 # ── other components ──────────────────────────────────────────────────────────
 server:
+  service:
+    type: LoadBalancer
+    annotations:
+      lbipam.cilium.io/ips: "192.168.30.202"
   resources:
     requests:
       cpu: 50m

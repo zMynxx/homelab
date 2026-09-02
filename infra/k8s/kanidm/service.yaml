@@ -1,0 +1,23 @@
+---
+# LoadBalancer gets an IP from the Cilium IPAM pool (192.168.30.200/28).
+# Caddy reaches Kanidm at this IP for OIDC. Internal services use ClusterDNS for LDAP.
+apiVersion: v1
+kind: Service
+metadata:
+  name: kanidm
+  namespace: kanidm
+  annotations:
+    # Pin to .201 so the Caddyfile target is stable.
+    # Authelia (removed) would have used .200 — leaving a gap for future use.
+    lbipam.cilium.io/ips: "192.168.30.201"
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: kanidm
+  ports:
+    - name: https
+      port: 8443
+      targetPort: 8443
+    - name: ldap
+      port: 3636
+      targetPort: 3636
