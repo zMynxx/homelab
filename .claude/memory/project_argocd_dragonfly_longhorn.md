@@ -65,3 +65,29 @@ Note: `runtimeConfiguration.issuer` controls CSR signing for workloads; `certman
 **What**: Stakater Reloader v2.2.16 installed via ArgoCD app `infra/k8s/argocd/apps/reloader.yaml`, namespace `reloader`.
 
 **Kyverno**: `reloader` namespace must be in exclusion list in `infra/k8s/kyverno/policies/baseline.yaml` for all three policies (require-non-root, disallow-privileged, require-resource-limits).
+
+## Longhorn engine binary — manual copy to HOST namespace via disk-mount
+
+**What**: `engine-binary-sync` DaemonSet says "Binary already present" on turingpi-1/3 because it checks the SD card (kubelet namespace) view where engine-image already wrote it. But the instance manager reads from HOST namespace (NVMe) — binary is missing there.
+
+**Symptom**: Instance manager logs `stat /host/var/lib/longhorn/engine-binaries/.../longhorn: no such file or directory`, replicas in error state, volumes degraded.
+
+**Fix**: Pipe binary directly from engine-image pod through disk-mount pod into the NVMe (`/host/longhorn/engine-binaries/...`):
+```bash
+MOUNT_POD=$(kubectl get pod -n longhorn-mount -o jsonpath='{.items[?(@.spec.nodeName=="<node>")].metadata.name}')
+ENGINE_POD=$(kubectl get pod -n longhorn-system -l longhorn.io/component=engine-image --field-selector spec.nodeName=<node> -o jsonpath='{.items[0].metadata.name}')
+TARGET_DIR="/host/longhorn/engine-binaries/docker.io-longhornio-longhorn-engine-v1.12.1"
+kubectl exec -n longhorn-system $ENGINE_POD -- cat /usr/local/bin/longhorn | \
+  kubectl exec -n longhorn-mount $MOUNT_POD -i -- sh -c "mkdir -p $TARGET_DIR && cat > $TARGET_DIR/longhorn && chmod +x $TARGET_DIR/longhorn"
+```
+Use pipe (not `kubectl cp`) to avoid two-step copy that is sensitive to VIP connection resets.
+
+**Why**: disk-mount's `/host/longhorn` is the NVMe mount from HOST, even when Bidirectional propagation doesn't fully reach the true HOST namespace. Writing here is visible to the instance manager.
+
+**Note**: On node upgrade, must redo this copy for the new engine image version.
+
+## ArgoCD root app OutOfSync — extra finalizers
+
+**What**: Root app showed kyverno and longhorn Applications as OutOfSync due to extra `pre-delete-finalizer.argocd.argoproj.io` and `pre-delete-finalizer.argocd.argoproj.io/cleanup` finalizers on live Application objects not present in repo files.
+
+**Fix**: `kubectl patch app -n argocd <name> --type=json -p '[{"op":"replace","path":"/metadata/finalizers","value":["resources-finalizer.argocd.argoproj.io"]}]'`

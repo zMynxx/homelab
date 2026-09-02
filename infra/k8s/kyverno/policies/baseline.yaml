@@ -41,6 +41,8 @@ spec:
                 - dragonfly-operator-system
                 - cnpg-system
                 - reloader
+                - databases
+                - kanidm
 ---
 # Disallow privileged containers.
 apiVersion: kyverno.io/v1
@@ -82,6 +84,8 @@ spec:
                 - dragonfly-operator-system
                 - cnpg-system
                 - reloader
+                - databases
+                - kanidm
 ---
 # Block the :latest tag to force immutable image references.
 apiVersion: kyverno.io/v1
@@ -146,6 +150,8 @@ spec:
                 - dragonfly-operator-system
                 - cnpg-system
                 - reloader
+                - databases
+                - kanidm
 ---
 # Disallow NodePort services (ingress must go through Istio Gateway).
 apiVersion: kyverno.io/v1
