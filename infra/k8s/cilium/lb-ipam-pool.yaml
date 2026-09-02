@@ -6,5 +6,5 @@ kind: CiliumLoadBalancerIPPool
 metadata:
   name: homelab-pool
 spec:
-  cidrs:
+  blocks:
     - cidr: 192.168.30.200/28
