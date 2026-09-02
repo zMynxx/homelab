@@ -23,9 +23,9 @@ just talos-upgrade v1.x.y # Rolling Talos OS upgrade (one node at a time, --wait
 
 | Node | IP | Status as of 2026-09-02 |
 |---|---|---|
-| turingpi-1 | 192.168.30.103 | v1.13.6 — **needs upgrade** |
+| turingpi-1 | 192.168.30.103 | v1.13.9 — current |
 | turingpi-3 | 192.168.30.104 | v1.13.9 — current |
-| turingpi-4 | 192.168.30.105 | v1.13.6 — **needs upgrade** |
+| turingpi-4 | 192.168.30.105 | v1.13.9 — current |
 
 **Why nodes keep reverting to v1.13.6**:
 - The talosctl client certificate in `~/.talos/config` (and `infra/talos/clusterconfig/talosconfig`) expires annually.
