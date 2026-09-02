@@ -16,6 +16,10 @@
 global:
   image:
     tag: "v3.5.2"
+  # Disable Helm-generated NetworkPolicies — Istio Ambient mTLS enforces
+  # access control via SPIFFE identity (AuthorizationPolicy).
+  networkPolicy:
+    create: false
 
 configs:
   params:

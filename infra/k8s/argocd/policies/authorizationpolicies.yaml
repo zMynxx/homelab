@@ -1,0 +1,52 @@
+---
+# Default deny-all for argocd namespace.
+# All access must be explicitly permitted below.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-all
+  namespace: argocd
+spec: {}
+---
+# Allow all intra-namespace traffic.
+# ArgoCD components (server, repo-server, application-controller, etc.) and
+# DragonflyDB replicas communicate freely within the argocd namespace.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-argocd-internal
+  namespace: argocd
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["argocd"]
+---
+# Allow external access to argocd-server (UI + API).
+# No source restriction — the UI is accessed directly from browsers and CLI.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-argocd-server-external
+  namespace: argocd
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-server
+  action: ALLOW
+  rules:
+    - {}
+---
+# Allow monitoring namespace to scrape argocd metrics endpoints.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-monitoring-scrape
+  namespace: argocd
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["monitoring"]
