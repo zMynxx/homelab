@@ -11,3 +11,15 @@
 !**/**/*.sops.bin
 Ansible/00-Init/ansible
 Ansible/01-Passthrough/ansible
+
+# Local tooling sessions
+.sisyphus/
+.weave/
+
+# Old/archived files
+justfile.old
+old/
+
+# Network binaries and backups
+network/*.dmg
+network/unifi-switch-backups/
