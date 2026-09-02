@@ -1,4 +1,6 @@
 ---
+# Shared PostgreSQL cluster — foundation for future apps (Grafana, Gitea, etc.)
+# Add Role + Database CRDs per-app when needed.
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -18,59 +20,3 @@ spec:
     limits:
       cpu: 1000m
       memory: 1Gi
----
-# Role + Database for Authelia
-apiVersion: postgresql.cnpg.io/v1
-kind: Role
-metadata:
-  name: authelia
-  namespace: databases
-spec:
-  cluster:
-    name: homelab-db
-  name: authelia
-  passwordSecret:
-    name: authelia-db-credentials
-    key: password
-  login: true
-  superuser: false
-  createDb: false
----
-apiVersion: postgresql.cnpg.io/v1
-kind: Database
-metadata:
-  name: authelia
-  namespace: databases
-spec:
-  cluster:
-    name: homelab-db
-  name: authelia
-  owner: authelia
----
-# Role + Database for LLDAP
-apiVersion: postgresql.cnpg.io/v1
-kind: Role
-metadata:
-  name: lldap
-  namespace: databases
-spec:
-  cluster:
-    name: homelab-db
-  name: lldap
-  passwordSecret:
-    name: lldap-db-credentials
-    key: password
-  login: true
-  superuser: false
-  createDb: false
----
-apiVersion: postgresql.cnpg.io/v1
-kind: Database
-metadata:
-  name: lldap
-  namespace: databases
-spec:
-  cluster:
-    name: homelab-db
-  name: lldap
-  owner: lldap
