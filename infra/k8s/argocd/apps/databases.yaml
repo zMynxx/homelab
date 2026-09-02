@@ -1,8 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cilium-lb-ipam
+  name: databases
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
 spec:
@@ -10,19 +12,14 @@ spec:
   source:
     repoURL: https://github.com/zMynxx/homelab.git
     targetRevision: main
-    path: infra/k8s/cilium
-    directory:
-      include: "lb-ipam-pool.yaml"
+    path: infra/k8s/databases
   destination:
     server: https://kubernetes.default.svc
-    namespace: kube-system
-  ignoreDifferences:
-    - group: cilium.io
-      kind: CiliumLoadBalancerIPPool
-      jsonPointers:
-        - /spec/disabled
-        - /status
+    namespace: databases
   syncPolicy:
     automated:
       prune: false
       selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
