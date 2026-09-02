@@ -5,15 +5,45 @@ Declarative homelab on TuringPi 2 (3x RK1 ARM64). Talos Linux cluster, Cilium CN
 
 ## Key Commands
 ```bash
-just talos-cilium       # Install/upgrade Cilium (reads infra/k8s/cilium/values.yaml)
-just talos-kyverno      # Install Kyverno + baseline policies
-just talos-generate     # Regenerate Talos machine configs (decrypts SOPS)
-just talos-apply        # Apply configs to nodes
-just talos-bootstrap    # Bootstrap etcd (once per cluster lifetime)
-just talos-kubeconfig   # Fetch and merge kubeconfig
-just talos-spegel       # Install Spegel P2P image mirror
-just talos-zot          # Install Zot in-cluster registry cache
+just talos-cilium         # Install/upgrade Cilium (reads infra/k8s/cilium/values.yaml)
+just talos-kyverno        # Install Kyverno + baseline policies
+just talos-generate       # Regenerate Talos machine configs (decrypts SOPS)
+just talos-apply          # Apply configs to nodes (maintenance mode only — NOT for upgrades)
+just talos-bootstrap      # Bootstrap etcd (once per cluster lifetime)
+just talos-kubeconfig     # Fetch and merge kubeconfig
+just talos-spegel         # Install Spegel P2P image mirror
+just talos-zot            # Install Zot in-cluster registry cache
+just talos-upgrade v1.x.y # Rolling Talos OS upgrade (one node at a time, --wait)
 ```
+
+## Talos Version Tracking
+
+**Target version**: v1.13.9  
+**Schematic**: `2514fe5d294a5f96447ce4ea8ba0ff5cd2939607c4158c5806ade76bd1b invoke7` (fuse3, iscsi-tools, nfs-utils, nut-client, nvme-cli, rockchip-rknn)
+
+| Node | IP | Status as of 2026-09-02 |
+|---|---|---|
+| turingpi-1 | 192.168.30.103 | v1.13.6 — **needs upgrade** |
+| turingpi-3 | 192.168.30.104 | v1.13.9 — current |
+| turingpi-4 | 192.168.30.105 | v1.13.6 — **needs upgrade** |
+
+**Why nodes keep reverting to v1.13.6**:
+- The talosctl client certificate in `~/.talos/config` (and `infra/talos/clusterconfig/talosconfig`) expires annually.
+- When the cert is expired, `talosctl upgrade --wait` fails mid-poll with i/o timeout. The node may have already rebooted into the new version, but the user sees the command fail and retries — overwriting the upgrade with a different version (downgrade).
+- Cert expired: 2026-08-23. Regenerated: 2026-09-02. Next expiry: 2027-09-02.
+- **Before any upgrade**: verify cert is valid with `talosctl config info` → check "Certificate expires".
+
+**Upgrade command** (only upgrades nodes not already at target):
+```bash
+just talos-upgrade v1.13.9
+```
+Verify after: `talosctl -n 192.168.30.103,192.168.30.104,192.168.30.105 version | grep -E "NODE|Tag"`
+
+**If a node reverts to v1.13.6 again**:
+1. Check cert: `talosctl config info` — if expired, regenerate first
+2. Check dmesg: `talosctl -n <node-ip> dmesg | grep -iE "rollback|upgrade"` — A/B rollback messages indicate the new version failed to boot
+3. Check extension versions: `talosctl -n <node-ip> get extensions` — `rockchip-rknn` version must match Talos version
+4. Check if upgrade completed before retrying: `talosctl -n <node-ip> version` — if already at target, do NOT re-run upgrade
 
 ## Critical Pitfalls (learned the hard way)
 
