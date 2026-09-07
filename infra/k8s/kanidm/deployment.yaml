@@ -30,7 +30,7 @@ spec:
               containerPort: 3636
           volumeMounts:
             - name: config
-              mountPath: /data/server.toml
+              mountPath: /etc/kanidm/server.toml
               subPath: server.toml
             - name: data
               mountPath: /data
