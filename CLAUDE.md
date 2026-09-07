@@ -45,6 +45,23 @@ Verify after: `talosctl -n 192.168.30.103,192.168.30.104,192.168.30.105 version 
 3. Check extension versions: `talosctl -n <node-ip> get extensions` — `rockchip-rknn` version must match Talos version
 4. Check if upgrade completed before retrying: `talosctl -n <node-ip> version` — if already at target, do NOT re-run upgrade
 
+**After every upgrade — mandatory post-upgrade checklist**:
+1. Uncordon nodes: `kubectl get nodes -o custom-columns=NAME:.metadata.name,UNSCHEDULABLE:.spec.unschedulable` — if `true`, run `kubectl uncordon <node>`
+   - Drain failure (Longhorn rate limiter) leaves nodes cordoned even after reboot. Longhorn mirrors the cordon → `SCHEDULABLE: False` → instance-managers won't start → all volumes on that node fail to attach.
+2. Verify engine binary on NVMe for each rebooted node via disk-mount pod:
+   ```bash
+   MOUNT_POD=$(kubectl get pod -n longhorn-mount --field-selector spec.nodeName=<node> -o jsonpath='{.items[0].metadata.name}')
+   kubectl exec -n longhorn-mount $MOUNT_POD -- ls -lh /host/longhorn/engine-binaries/docker.io-longhornio-longhorn-engine-v1.12.1/longhorn
+   ```
+   Expected: `42M`. If missing, pipe it from the engine-image pod:
+   ```bash
+   TARGET="/host/longhorn/engine-binaries/docker.io-longhornio-longhorn-engine-v1.12.1"
+   ENGINE=$(kubectl get pod -n longhorn-system -l longhorn.io/component=engine-image --field-selector spec.nodeName=<node> -o jsonpath='{.items[0].metadata.name}')
+   kubectl exec -n longhorn-system $ENGINE -- cat /usr/local/bin/longhorn | \
+     kubectl exec -i -n longhorn-mount $MOUNT_POD -- sh -c "mkdir -p $TARGET && cat > $TARGET/longhorn && chmod +x $TARGET/longhorn"
+   ```
+   Then delete errored instance-managers: `kubectl delete instancemanager -n longhorn-system <name>`
+
 ## Critical Pitfalls (learned the hard way)
 
 ### 1. Kyverno blocks system namespace pods silently
