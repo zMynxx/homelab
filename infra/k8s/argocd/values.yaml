@@ -50,28 +50,23 @@ configs:
 
   cm:
     url: "https://argocd.opnsense.internal"
-    oidc.config: |
-      name: Kanidm
-      issuer: https://kanidm.opnsense.internal/oauth2/openid/argocd
-      clientID: argocd
-      clientSecret: $argocd-oidc-kanidm:clientSecret
-      requestedScopes:
-        - openid
-        - email
-        - profile
-        - groups
-      rootCA: |
-        -----BEGIN CERTIFICATE-----
-        MIIBozCCAUmgAwIBAgIQb1dsuhrPlPg7uVhdzg8NMjAKBggqhkjOPQQDAjAwMS4w
-        LAYDVQQDEyVDYWRkeSBMb2NhbCBBdXRob3JpdHkgLSAyMDI1IEVDQyBSb290MB4X
-        DTI1MDkwNTE3NDM1OVoXDTM1MDcxNTE3NDM1OVowMDEuMCwGA1UEAxMlQ2FkZHkg
-        TG9jYWwgQXV0aG9yaXR5IC0gMjAyNSBFQ0MgUm9vdDBZMBMGByqGSM49AgEGCCqG
-        SM49AwEHA0IABA6MBz/jDHp5URfrh+h7sxFh/2WUL40N54HrI3IAMBomUYCR7gLR
-        oyfkQxVGwEmq/f7Y0JRJVx7j2MiwHUqS5jijRTBDMA4GA1UdDwEB/wQEAwIBBjAS
-        BgNVHRMBAf8ECDAGAQH/AgEBMB0GA1UdDgQWBBT+5fAZ0qM/D+wDxNcUYymm1TB0
-        OTAKBggqhkjOPQQDAgNIADBFAiAsD4uFBlhUIzUPHbycpc5ScNllVJVG8JH84rSb
-        hJtVpwIhAPCBAztDVx+XW3DqRv5FlnSseEOpazcT365ApgOR6qWW
-        -----END CERTIFICATE-----
+    dex.config: |
+      connectors:
+      - type: oidc
+        id: kanidm
+        name: Kanidm
+        config:
+          issuer: https://kanidm.opnsense.internal/oauth2/openid/argocd
+          clientID: argocd
+          clientSecret: $argocd-oidc-kanidm:clientSecret
+          redirectURI: https://argocd.opnsense.internal/api/dex/callback
+          scopes:
+            - openid
+            - email
+            - profile
+            - groups
+          enablePKCE: true
+          insecureSkipVerify: true
 
   rbac:
     policy.default: role:admin
@@ -234,6 +229,13 @@ notifications:
 redis:
   enabled: false
 
-# Disable Dex — no SSO needed for homelab
+# Dex — OIDC intermediary for Kanidm SSO (handles PKCE that ArgoCD native OIDC lacks)
 dex:
-  enabled: false
+  enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
