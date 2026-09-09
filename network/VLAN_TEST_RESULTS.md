@@ -1,8 +1,8 @@
 # VLAN Isolation Test Results
 
-**Test Date**: April 21, 2026  
-**Tester**: Automated validation via OPNsense API  
-**Status**: ✅ Configuration validated, awaiting physical device testing
+**Test Date**: April 21, 2026 (config), September 7, 2026 (full physical re-validation)
+**Tester**: Manual — all three SSIDs tested post-CUDY removal
+**Status**: ✅ Fully validated — all VLANs confirmed working and isolated
 
 ---
 
@@ -138,7 +138,7 @@ Traffic from 192.168.10.x:
 
 ### Test 4: Guest Network (VLAN 20) Isolation
 
-**Status**: ✅ PREVIOUSLY VERIFIED (Session 1)
+**Status**: ✅ VERIFIED (re-confirmed 2026-09-07, post-CUDY removal)
 
 **Prerequisites:**
 - Connect a device (phone/laptop) to "Homelab-Guest" SSID
@@ -218,13 +218,18 @@ curl http://192.168.20.100 # Any guest device - should timeout
 - ✅ Legacy LAN (192.168.1.x): Accessible
 - ❌ DMZ/Guest (192.168.20.x): **BLOCKED** by firewall
 
-**Actual Results**: ⏳ Awaiting user testing (see Test 1 instructions in this session)
+**Actual Results** (2026-09-07):
+- ✅ Internet: Full access confirmed
+- ✅ DNS: Working
+- ✅ Management VLAN (192.168.10.1): Reachable
+- ✅ Legacy LAN (192.168.1.1): Reachable
+- ❌ DMZ/Guest (192.168.20.1): Blocked as expected
 
-**Status**: ⏳ USER ACTION REQUIRED
+**Status**: ✅ VERIFIED
 
 ### Test 6: Management Network (VLAN 10) Security Hardening
 
-**Status**: ⏳ USER ACTION REQUIRED (See test procedures above in this session)
+**Status**: ✅ VERIFIED (2026-09-07, post-CUDY removal)
 
 **Prerequisites:**
 - Connect a device to "Homelab-Mgmt" SSID
@@ -260,9 +265,15 @@ ping -c 4 192.168.20.1
 - ✅ Internal VLAN (192.168.30.x): Accessible
 - ❌ DMZ/Guest (192.168.20.x): **BLOCKED** by firewall
 
-**Actual Results**: ⏳ Awaiting user testing (see Test 2 instructions in this session)
+**Actual Results** (2026-09-07):
+- ❌ Internet: Blocked as expected
+- ✅ OPNsense UI (192.168.10.1): Accessible
+- ✅ DNS: Working
+- ✅ Legacy LAN (192.168.1.1): Reachable
+- ✅ Internal VLAN (192.168.30.1): Reachable
+- ❌ DMZ/Guest (192.168.20.1): Blocked as expected
 
-**Status**: ⏳ USER ACTION REQUIRED
+**Status**: ✅ VERIFIED
 
 ---
 
@@ -304,11 +315,10 @@ BLOCK opt5 ICMP 192.168.30.100 → 192.168.20.1
 - ✅ Firewall aliases correctly defined
 - ✅ Rule logic verified (correct order, correct actions)
 
-### Physical Device Testing (User Action Required)
-- ✅ Guest network isolation (Test 4) - **VERIFIED in previous session**
-- ⏳ Internal network access control (Test 5) - **Awaiting user action (Test 1 above)**
-- ⏳ Management network security hardening (Test 6) - **Awaiting user action (Test 2 above)**
-- ⏳ Firewall log verification - **Awaiting user action (Test 4 above)**
+### Physical Device Testing
+- ✅ Guest network isolation (Test 4) — verified 2026-09-07
+- ✅ Internal network access control (Test 5) — verified 2026-09-07
+- ✅ Management network security hardening (Test 6) — verified 2026-09-07
 
 ---
 
@@ -354,6 +364,6 @@ Once user completes testing and reports results:
 
 ---
 
-**Last Updated**: April 21, 2026 (Test procedures provided in current session)
-**Configuration Verified**: Yes (via OPNsense API)  
-**Physical Testing**: Partially complete (Guest network verified, Internal + Management pending user action)
+**Last Updated**: 2026-09-07 — full physical re-validation post-CUDY removal
+**Configuration Verified**: Yes (via OPNsense API)
+**Physical Testing**: ✅ Complete — all three VLANs verified on direct UniFi → PoE injector → Ruckus path

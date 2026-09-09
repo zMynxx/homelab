@@ -1,0 +1,2 @@
+acme_ca https://192.168.10.37:8443/acme/acme/directory
+acme_ca_root /usr/local/share/certs/tinyca-root.crt

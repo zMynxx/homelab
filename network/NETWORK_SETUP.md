@@ -30,22 +30,22 @@ OPNsense firewall/router configuration and network architecture documentation.
 ```
 ISP Router
     ↓ (WAN)
-OPNsense (192.168.1.1/16)
-    ↓ (LAN - single flat network)
-CUDY 16-Port PoE Switch (unmanaged/dumb)
-    ├── Ruckus R720 AP (Wi-Fi access)
-    ├── TuringPi2 (Talos cluster)
-    ├── Raspberry Pi (Step-CA/tinyca)
-    └── Other devices
-
+OPNsense (igc0: WAN, igc1: trunk VLAN 10/20/30 + untagged)
+    ↓ igc1 (802.1Q trunk)
+UniFi USW-Flex-2.5G-5 (192.168.10.20, powered via PoE In on Port 5)
+    ├── Port 1: trunk ← OPNsense igc1 (VLANs 10/20/30)
+    ├── Port 2: access VLAN 30 → TuringPi 2 (Talos cluster)
+    ├── Port 3: access VLAN 10 → RPi-TinyCA (192.168.10.37)
+    ├── Port 4: trunk → PoE injector → Ruckus R720 (192.168.10.10)
+    └── Port 5: PoE IN (switch power — not a data port)
 ```
 
 ### Switching Infrastructure
 
 | Device | Type | Ports | PoE | Management | Role | Status |
 |--------|------|-------|-----|------------|------|--------|
-| **CUDY 16-Port** | Unmanaged | 16x 1GbE | ✅ Yes | ❌ None | Primary distribution switch | Active |
-| **UniFi USW-Flex-2.5G-5** | Managed | 5x 2.5GbE | 1x PoE+ In | ✅ Web UI | VLAN-aware managed switch | Not configured |
+| **UniFi USW-Flex-2.5G-5** | Managed | 4x 2.5GbE data + 1x PoE In | Powered via PoE In | ✅ Web UI (`192.168.10.20`) | Sole distribution switch | Active |
+| ~~CUDY 16-Port~~ | Unmanaged | 16x 1GbE | ✅ Yes | ❌ None | Removed 2026-09-07 | Removed |
 
 **UniFi USW-Flex-2.5G-5 Specs:**
 - **Ports**: 5x 2.5GbE RJ45 (data only)
@@ -340,23 +340,20 @@ See [QFEEDS_IDS_SETUP.md](./QFEEDS_IDS_SETUP.md) for the operational checklist a
 ✅ DNS over TLS encryption  
 ✅ MaxMind GeoBlocking  
 ✅ Ruckus R720 Wi-Fi AP (802.11ac Wave 2)  
-✅ CUDY 16-port PoE switch (unmanaged)  
+~~✅ CUDY 16-port PoE switch~~ — removed 2026-09-07  
 ✅ **VLAN infrastructure fully operational** (VLANs 10, 20, 30 on igc1 trunk)  
 ✅ **Ruckus SSIDs configured with VLAN tagging** (Homelab-Mgmt, Homelab-Guest, Homelab-Internal)  
 ✅ **DHCP services active** on all VLANs (ISC DHCPv4 Legacy)  
 ✅ **Guest network (VLAN 20) operational** - Isolated from internal networks with internet access  
 ✅ **Firewall rules active** - Guest network isolation enforced  
 
-**Ready to Deploy:**
-🔵 UniFi USW-Flex-2.5G-5 managed switch (physical migration pending — see [UNIFI_MAIN_SWITCH_MIGRATION.md](./UNIFI_MAIN_SWITCH_MIGRATION.md))  
+✅ **UniFi USW-Flex-2.5G-5 deployed** — sole switch, CUDY removed (see [UNIFI_MAIN_SWITCH_MIGRATION.md](./UNIFI_MAIN_SWITCH_MIGRATION.md))  
+✅ **Ruckus R720 on PoE injector**, connected to UniFi Port 4 (trunk, VLANs 10/20/30)  
 
 **In Progress:**
-🟡 **VLAN isolation testing** - Complete test plan in [VLAN_COMPLETION_GUIDE.md](./VLAN_COMPLETION_GUIDE.md)  
+🟡 **VLAN isolation re-verification** post-CUDY removal — see [VLAN_TEST_RESULTS.md](./VLAN_TEST_RESULTS.md)  
 
 **Planned:**
-⏳ UniFi switch deployment with VLAN trunk configuration  
-⏳ Physical cabling migration (Ruckus AP to UniFi switch)  
-⏳ Device migration to appropriate VLANs  
 ⏳ IPS/IDS (Suricata/Snort)  
 ⏳ Threat intelligence feeds (q-feeds)  
 ⏳ HAProxy reverse proxy  
