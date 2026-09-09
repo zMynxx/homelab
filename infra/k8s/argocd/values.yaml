@@ -48,6 +48,23 @@ configs:
     # DragonflyDB Redis-compatible cache (3-replica cluster in argocd namespace)
     redis.server: "argocd-cache:6379"
 
+  cm:
+    url: "https://argocd.opnsense.internal"
+    oidc.config: |
+      name: Kanidm
+      issuer: https://kanidm.opnsense.internal/oauth2/openid/argocd
+      clientID: argocd
+      clientSecret: $argocd-oidc-kanidm:clientSecret
+      requestedScopes:
+        - openid
+        - email
+        - profile
+        - groups
+      insecureSkipVerify: true
+
+  rbac:
+    policy.default: role:admin
+
   # SOPS CMP plugin: decrypts raw *.sops.yaml Secret manifests
   cmp:
     create: true
