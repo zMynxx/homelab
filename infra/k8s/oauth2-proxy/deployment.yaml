@@ -52,6 +52,7 @@ spec:
             - --pass-user-headers=true
             - --skip-provider-button=true
             - --code-challenge-method=S256
+            - --whitelist-domain=.opnsense.internal
           env:
             - name: OAUTH2_PROXY_CLIENT_SECRET
               valueFrom:
