@@ -20,14 +20,23 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: kanidm
-          image: kanidm/server:1.4.3
+          image: kanidm/server:1.11.1
+          env:
+            - name: KANIDM_CONFIG
+              value: /etc/kanidm/server.toml
           ports:
             - name: https
               containerPort: 8443
             - name: ldap
               containerPort: 3636
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             - name: config
               mountPath: /etc/kanidm/server.toml
