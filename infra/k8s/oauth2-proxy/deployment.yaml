@@ -23,6 +23,12 @@ spec:
       containers:
         - name: oauth2-proxy
           image: quay.io/oauth2-proxy/oauth2-proxy:v7.7.1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
           args:
             - --provider=oidc
             # Use cluster-internal URL for OIDC discovery (CoreDNS resolves it)
