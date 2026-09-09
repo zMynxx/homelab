@@ -60,7 +60,19 @@ configs:
         - email
         - profile
         - groups
-      insecureSkipVerify: true
+      rootCA: |
+        -----BEGIN CERTIFICATE-----
+        MIIBtjCCATugAwIBAgIRAISlerkmkI8HyqSbZfZO16gwCgYIKoZIzj0EAwMwGjEY
+        MBYGA1UEAxMPSG9tZWxhYiBSb290IENBMB4XDTI2MDQyMjIwMTY1MVoXDTM2MDQx
+        OTIwMTY1MVowGjEYMBYGA1UEAxMPSG9tZWxhYiBSb290IENBMHYwEAYHKoZIzj0C
+        AQYFK4EEACIDYgAE554p1NOMNCDZKJOTKsAynkzvWxH1YHHu3ay63JMgT3M//PTY
+        kSD6Fi00lbid2uSqdHD+J5zxPqi/tVjemkOrJLAYYqIvf3lckrYnOqgM5YRcfCsf
+        ibNKTGvC/4KQ2w4Ao0UwQzAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0TAQH/BAgwBgEB
+        /wIBATAdBgNVHQ4EFgQUsbtAHT117QffrMsEux/sSexNGcgwCgYIKoZIzj0EAwMD
+        aQAwZgIxAPUTufJ8ylqJK7bqNHdAlTwjUiDhKpy6mC82Zu52nvvLTTRiu+Y60SGR
+        Ac5ol0xaeAIxAPN42GZRu9gxHztqsE0rNY/2hrXolHvmmHzmBYEFssP3C0Iq6s0r
+        1fb2YpNusr0l2A==
+        -----END CERTIFICATE-----
 
   rbac:
     policy.default: role:admin
