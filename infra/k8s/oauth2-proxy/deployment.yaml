@@ -25,8 +25,10 @@ spec:
           image: quay.io/oauth2-proxy/oauth2-proxy:v7.7.1
           args:
             - --provider=oidc
-            # Kanidm OIDC issuer: https://<domain>/oauth2/openid/<client-name>
+            # Use cluster-internal URL for OIDC discovery (CoreDNS resolves it)
+            # Kanidm's configured origin is kanidm.opnsense.internal so issuer won't match — skip check
             - --oidc-issuer-url=https://kanidm.kanidm.svc.cluster.local:8443/oauth2/openid/oauth2-proxy
+            - --insecure-oidc-skip-issuer-verification=true
             - --client-id=oauth2-proxy
             - --redirect-url=https://oauth2-proxy.opnsense.internal/oauth2/callback
             # forward_auth mode: return 200/401 without proxying upstream
