@@ -84,6 +84,20 @@ Key args:
 All `*.opnsense.internal` → `192.168.30.1` (VLAN30 gateway, reachable from client at 192.168.30.101)
 **NOT 192.168.10.1** (MGMT VLAN, unreachable from VLAN30 clients)
 
+## ArgoCD Native OIDC with Kanidm (CONFIGURED — pending sync)
+Configured in `infra/k8s/argocd/values.yaml` (`configs.cm.oidc.config`):
+- Issuer: `https://kanidm.opnsense.internal/oauth2/openid/argocd`
+- ClientID: `argocd`
+- Client secret: in SOPS-encrypted `infra/k8s/argocd/oidc/argocd-oidc-kanidm.sops.yaml` (Secret `argocd-oidc-kanidm`, key `clientSecret`)
+- Referenced in oidc.config as `$argocd-oidc-kanidm:clientSecret` (ArgoCD external secret syntax)
+- ArgoCD callback URL registered in Kanidm: `https://argocd.opnsense.internal/auth/callback`
+- Scopes: openid, email, profile, groups
+- `insecureSkipVerify: true` (Kanidm cert signed by homelab CA)
+- `policy.default: role:admin` (all authenticated users get admin — homelab only)
+- Managed by ArgoCD Application `argocd-oidc` (`infra/k8s/argocd/apps/argocd-oidc.yaml`)
+- **Requires ArgoCD sync to be fixed before this takes effect** (see below)
+- If ArgoCD sync is broken: manually apply with `kubectl apply -f infra/k8s/argocd/oidc/argocd-oidc-kanidm.sops.yaml` (after decrypting) and `helm upgrade argocd argo/argo-cd -f infra/k8s/argocd/values.yaml -n argocd`
+
 ## ArgoCD Sync Issue (UNRESOLVED)
 All apps show "Unknown" sync status. Error: `failed to list refs: EOF`
 - GitHub reachable from cluster (HTTP 200 confirmed)
