@@ -22,7 +22,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: kanidm
-          image: kanidm/server:1.11.1
+          image: kanidm/server:1.4.3
           ports:
             - name: https
               containerPort: 8443
