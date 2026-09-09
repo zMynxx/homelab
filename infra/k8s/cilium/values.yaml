@@ -50,6 +50,10 @@ cni:
 enableIPv4Masquerade: true
 enableIPv6Masquerade: false
 
+# === L2 Announcements (ARP for LoadBalancer VIPs) ===
+l2announcements:
+  enabled: true
+
 # === Features ===
 # l7Proxy disabled: Istio handles L7 policy; Cilium operates at L3/L4 only.
 l7Proxy: false

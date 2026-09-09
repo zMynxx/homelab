@@ -1,6 +1,4 @@
 ---
-# Cilium LoadBalancer IP pool — reserves 192.168.30.200–.214 for LoadBalancer services.
-# Services with type: LoadBalancer get an IP from this range automatically.
 apiVersion: cilium.io/v2
 kind: CiliumLoadBalancerIPPool
 metadata:
@@ -8,3 +6,13 @@ metadata:
 spec:
   blocks:
     - cidr: 192.168.30.200/28
+---
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: homelab-l2
+spec:
+  interfaces:
+    - ".*"
+  externalIPs: true
+  loadBalancerIPs: true
