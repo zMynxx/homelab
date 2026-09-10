@@ -66,7 +66,8 @@ configs:
             - profile
             - groups
           enablePKCE: true
-          insecureSkipVerify: true
+          rootCAs:
+            - /etc/ssl/caddy-ca/ca.crt
 
   rbac:
     policy.default: role:admin
@@ -232,6 +233,13 @@ redis:
 # Dex — OIDC intermediary for Kanidm SSO (handles PKCE that ArgoCD native OIDC lacks)
 dex:
   enabled: true
+  volumes:
+    - name: caddy-local-ca
+      configMap:
+        name: argocd-caddy-local-ca
+  volumeMounts:
+    - name: caddy-local-ca
+      mountPath: /etc/ssl/caddy-ca
   resources:
     requests:
       cpu: 10m
