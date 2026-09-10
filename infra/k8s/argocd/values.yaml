@@ -42,9 +42,7 @@ configs:
     server.insecure: "true"
     # Allow Kustomize exec plugins (needed by ksops)
     kustomize.buildOptions: "--enable-alpha-plugins --enable-exec"
-    # Use self-managed repo-server (healthy) — bootstrap argocd-repo-server
-    # was crashlooping due to liveness probe kills, causing Unknown sync status
-    repo.server: "argocd-self-repo-server:8081"
+    repo.server: "argocd-repo-server:8081"
     # DragonflyDB Redis-compatible cache (3-replica cluster in argocd namespace)
     redis.server: "argocd-cache:6379"
 
@@ -233,6 +231,7 @@ redis:
 # Dex — OIDC intermediary for Kanidm SSO (handles PKCE that ArgoCD native OIDC lacks)
 dex:
   enabled: true
+  logLevel: debug
   volumes:
     - name: caddy-local-ca
       configMap:
