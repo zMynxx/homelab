@@ -63,7 +63,6 @@ configs:
             - email
             - profile
             - groups
-          enablePKCE: true
           rootCAs:
             - /etc/ssl/caddy-ca/ca.crt
 
@@ -242,7 +241,7 @@ dex:
   resources:
     requests:
       cpu: 10m
-      memory: 32Mi
-    limits:
-      cpu: 100m
       memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
