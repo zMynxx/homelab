@@ -2,6 +2,7 @@
 
 import 'just/talos.just'
 import 'just/observability.just'
+import 'just/sso.just'
 
 # default recipe to display help information
 default:
