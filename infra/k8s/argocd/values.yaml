@@ -65,6 +65,7 @@ configs:
             - groups
           rootCAs:
             - /etc/ssl/caddy-ca/ca.crt
+          enablePKCE: true
 
   rbac:
     policy.default: role:admin

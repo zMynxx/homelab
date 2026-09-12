@@ -3,6 +3,8 @@ kind: Secret
 metadata:
     name: argocd-oidc-kanidm
     namespace: argocd
+    labels:
+        app.kubernetes.io/part-of: argocd
 type: Opaque
 stringData:
     clientSecret: ENC[AES256_GCM,data:wGUzNOVzPH9vu2NnTqfK+oyEibep0GbqeLdC3NLPYLPRkZBnolUOYad47ozUnVTL,iv:kx25TKxRZKzGzoKe5nk9t1pIWdZQGgvfGxBBM9Wg9wY=,tag:S+1uWMp5nM+ohVULpgYYAw==,type:str]
