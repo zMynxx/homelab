@@ -1,0 +1,68 @@
+provider:
+  name: webhook
+  webhook:
+    image:
+      repository: ghcr.io/muhlba91/external-dns-provider-adguard
+      tag: latest
+    env:
+      - name: LOG_LEVEL
+        value: debug
+      - name: ADGUARD_URL
+        value: http://adguard-home.adguard-home.svc.cluster.local
+      - name: ADGUARD_USER
+        valueFrom:
+          secretKeyRef:
+            name: externaldns-adguard
+            key: username
+      - name: ADGUARD_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: externaldns-adguard
+            key: password
+      - name: SERVER_HOST
+        value: "0.0.0.0"
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: http-webhook
+      initialDelaySeconds: 10
+      timeoutSeconds: 5
+    readinessProbe:
+      httpGet:
+        path: /readyz
+        port: http-webhook
+      initialDelaySeconds: 10
+      timeoutSeconds: 5
+
+sources:
+  - service
+  - ingress
+
+policy: upsert-only
+
+registry: txt
+txtOwnerId: homelab
+txtPrefix: externaldns-
+
+interval: 1m
+triggerLoopOnEvent: true
+
+logLevel: info
+logFormat: text
+
+domainFilters: []
+
+serviceAccount:
+  create: true
+  name: external-dns
+
+rbac:
+  create: true
+  clusterRole: true
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
