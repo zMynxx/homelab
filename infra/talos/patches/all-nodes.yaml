@@ -43,6 +43,18 @@ machine:
           - http://localhost:5001
           - https://zot.registry.svc.cluster.local:5000
           - https://registry.k8s.io
+      docker.dragonflydb.io:
+        endpoints:
+          - https://zot.registry.svc.cluster.local:5000
+          - https://docker.dragonflydb.io
+      gcr.io:
+        endpoints:
+          - https://zot.registry.svc.cluster.local:5000
+          - https://gcr.io
+      reg.kyverno.io:
+        endpoints:
+          - https://zot.registry.svc.cluster.local:5000
+          - https://reg.kyverno.io
 
 # Disable kube-proxy — Cilium replaces it via eBPF.
 # NOTE: forwardKubeDNSToHost is intentionally NOT set here. The running
