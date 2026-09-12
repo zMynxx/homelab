@@ -50,7 +50,7 @@ sso-add-app app display lb_ip upstream:
     echo "=== [4/5] Writing and encrypting Kubernetes manifests ==="
     RECIPIENT=$(grep 'recipient:' "{{SSO_DIR}}/secrets.sops.yaml" | head -1 | awk '{print $2}')
 
-    PLAIN=$(mktemp /tmp/sso-secret-XXXXXX.yaml)
+    PLAIN=$(mktemp /tmp/sso-secret-XXXXXX.sops.yaml)
     trap 'rm -f "$PLAIN"' EXIT
     cat > "$PLAIN" <<EOF
 apiVersion: v1
@@ -63,7 +63,6 @@ stringData:
   OAUTH2_PROXY_COOKIE_SECRET: "${COOKIE_SECRET}"
 EOF
     SOPS_AGE_KEY_FILE="{{AGE_KEY}}" sops --encrypt \
-      --age "${RECIPIENT}" \
       "$PLAIN" > "{{SSO_DIR}}/${APP}-secrets.sops.yaml"
     echo "  Written: infra/k8s/oauth2-proxy/${APP}-secrets.sops.yaml"
 
@@ -261,7 +260,7 @@ sso-rotate-secret app:
 
     COOKIE_SECRET=$(python3 -c "import secrets,base64; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())")
 
-    PLAIN=$(mktemp /tmp/sso-secret-XXXXXX.yaml)
+    PLAIN=$(mktemp /tmp/sso-secret-XXXXXX.sops.yaml)
     trap 'rm -f "$PLAIN"' EXIT
     cat > "$PLAIN" <<EOF
 apiVersion: v1
@@ -274,7 +273,6 @@ stringData:
   OAUTH2_PROXY_COOKIE_SECRET: "${COOKIE_SECRET}"
 EOF
     SOPS_AGE_KEY_FILE="{{AGE_KEY}}" sops --encrypt \
-      --age "${RECIPIENT}" \
       "$PLAIN" > "{{SSO_DIR}}/${APP}-secrets.sops.yaml"
 
     echo "Secret rotated and re-encrypted: infra/k8s/oauth2-proxy/${APP}-secrets.sops.yaml"
