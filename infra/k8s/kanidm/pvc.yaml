@@ -1,13 +1,17 @@
 ---
+# Pre-created PVC for kanidm-0, bound to the existing PV (migrated from kanidm-data).
+# StatefulSet volumeClaimTemplates will use this existing PVC instead of provisioning a new one.
+# kanidm-data-kanidm-1 is provisioned automatically by the StatefulSet.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: kanidm-data
+  name: kanidm-data-kanidm-0
   namespace: kanidm
 spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: longhorn
+  volumeName: pvc-148c903c-ff62-44da-b1cf-f869c4a00bce
   resources:
     requests:
       storage: 5Gi

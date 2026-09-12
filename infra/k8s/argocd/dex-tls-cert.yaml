@@ -1,0 +1,18 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: argocd-dex-server-tls
+  namespace: argocd
+spec:
+  secretName: argocd-dex-server-tls
+  issuerRef:
+    name: homelab-ca
+    kind: ClusterIssuer
+  duration: 8760h   # 1 year
+  renewBefore: 720h # 30 days
+  dnsNames:
+    - argocd-dex-server.argocd.svc.cluster.local
+    - argocd-dex-server.argocd.svc
+    - argocd-dex-server
+    - localhost

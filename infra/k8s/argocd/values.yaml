@@ -42,9 +42,9 @@ configs:
     server.insecure: "true"
     # Allow Kustomize exec plugins (needed by ksops)
     kustomize.buildOptions: "--enable-alpha-plugins --enable-exec"
-    repo.server: "argocd-repo-server:8081"
+    repo.server: "argocd-repo-server.argocd.svc.cluster.local:8081"
     # DragonflyDB Redis-compatible cache (3-replica cluster in argocd namespace)
-    redis.server: "argocd-cache:6379"
+    redis.server: "argocd-cache.argocd.svc.cluster.local:6379"
 
   cm:
     url: "https://argocd.opnsense.internal"

@@ -5,7 +5,7 @@ metadata:
   name: kanidm-config
   namespace: kanidm
 data:
-  server.toml: |
+  server.toml.0: |
     bindaddress = "0.0.0.0:8443"
     ldapbindaddress = "0.0.0.0:3636"
     trust_x_forward_for = true
@@ -15,3 +15,31 @@ data:
     domain = "kanidm.opnsense.internal"
     origin = "https://kanidm.opnsense.internal"
     log_level = "info"
+
+    [replication]
+    origin = "repl://kanidm-0.kanidm-headless.kanidm.svc.cluster.local:8444"
+    bindaddress = "[::]:8444"
+
+    [replication."repl://kanidm-1.kanidm-headless.kanidm.svc.cluster.local:8444"]
+    type = "mutual-pull"
+    partner_cert = "MIIB-jCCAZ-gAwIBAgIRAfm0du1oL0D9vMIC4YPpOU4wCgYIKoZIzj0EAwIwTDEtMCsGA1UEAwwkZjliNDc2ZWQtNjgyZi00MGZkLWJjYzItMDJlMTgzZTkzOTRlMRswGQYDVQQKDBJLYW5pZG0gUmVwbGljYXRpb24wHhcNMjYwOTEyMTE1ODEwWhcNMzAwOTEyMTE1ODEwWjBMMS0wKwYDVQQDDCRmOWI0NzZlZC02ODJmLTQwZmQtYmNjMi0wMmUxODNlOTM5NGUxGzAZBgNVBAoMEkthbmlkbSBSZXBsaWNhdGlvbjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABDsKIhrIKE8xwCsyP9ac4RviXxol4zo4NY5E7lG-g9oBQgcYJ9LnsluHIljwZ6eLq7zE-7wgKiD2paAaj4Nvj6-jYjBgMCAGA1UdJQEB_wQWMBQGCCsGAQUFBwMCBggrBgEFBQcDATA8BgNVHREENTAzgjFrYW5pZG0tMS5rYW5pZG0taGVhZGxlc3Mua2FuaWRtLnN2Yy5jbHVzdGVyLmxvY2FsMAoGCCqGSM49BAMCA0kAMEYCIQD5u_tK-o0lrHswh5uaJpPnXyLljDWMZYpRi2tScR1YGgIhAJMCLHJA909_J2lJgoKEswmJOGgslhIxMz9wgc11A9c9"
+
+  server.toml.1: |
+    bindaddress = "0.0.0.0:8443"
+    ldapbindaddress = "0.0.0.0:3636"
+    trust_x_forward_for = true
+    db_path = "/data/kanidm.db"
+    tls_chain = "/certs/tls.crt"
+    tls_key = "/certs/tls.key"
+    domain = "kanidm.opnsense.internal"
+    origin = "https://kanidm.opnsense.internal"
+    log_level = "info"
+
+    [replication]
+    origin = "repl://kanidm-1.kanidm-headless.kanidm.svc.cluster.local:8444"
+    bindaddress = "[::]:8444"
+
+    [replication."repl://kanidm-0.kanidm-headless.kanidm.svc.cluster.local:8444"]
+    type = "mutual-pull"
+    partner_cert = "MIIB-DCCAZ-gAwIBAgIRAR6fO1wpd0qrnUlbISRLaugwCgYIKoZIzj0EAwIwTDEtMCsGA1UEAwwkMWU5ZjNiNWMtMjk3Ny00YWFiLTlkNDktNWIyMTI0NGI2YWU4MRswGQYDVQQKDBJLYW5pZG0gUmVwbGljYXRpb24wHhcNMjYwOTEyMTE1NzM3WhcNMzAwOTEyMTE1NzM3WjBMMS0wKwYDVQQDDCQxZTlmM2I1Yy0yOTc3LTRhYWItOWQ0OS01YjIxMjQ0YjZhZTgxGzAZBgNVBAoMEkthbmlkbSBSZXBsaWNhdGlvbjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABMJBdfZnqbLLGvzW9f3qYtZMnqY6x4sEjMqsyrKQe6UpjQVj1H8QQmQ6TJG6G9zLEsoK8Hf7saODEMPVeL9iFYijYjBgMCAGA1UdJQEB_wQWMBQGCCsGAQUFBwMCBggrBgEFBQcDATA8BgNVHREENTAzgjFrYW5pZG0tMC5rYW5pZG0taGVhZGxlc3Mua2FuaWRtLnN2Yy5jbHVzdGVyLmxvY2FsMAoGCCqGSM49BAMCA0cAMEQCIGzqwUTZs13H91xy_xaJ3byS3E1BikQKSkEB_nMqZaF1AiBxP4ThkKhvpnhj62y9-pWkkjnd5Mu8LQtjuz4EvGrhaA"
+    automatic_refresh = true

@@ -52,6 +52,5 @@ spec:
           secret:
             secretName: zot-tls
         - name: storage
-          # Ephemeral cache for the scaffold. Replace with a Longhorn PVC once
-          # the storage layer is deployed so the cache survives pod restarts.
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: zot-storage
