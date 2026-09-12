@@ -62,8 +62,7 @@ stringData:
   OAUTH2_PROXY_CLIENT_SECRET: "${CLIENT_SECRET}"
   OAUTH2_PROXY_COOKIE_SECRET: "${COOKIE_SECRET}"
 EOF
-    SOPS_AGE_KEY_FILE="{{AGE_KEY}}" sops --encrypt \
-      "$PLAIN" > "{{SSO_DIR}}/${APP}-secrets.sops.yaml"
+    SOPS_AGE_KEY_FILE="{{AGE_KEY}}" sops --encrypt "$PLAIN" > "{{SSO_DIR}}/${APP}-secrets.sops.yaml"
     echo "  Written: infra/k8s/oauth2-proxy/${APP}-secrets.sops.yaml"
 
     cat > "{{SSO_DIR}}/${APP}-deployment.yaml" <<EOF
@@ -272,8 +271,7 @@ stringData:
   OAUTH2_PROXY_CLIENT_SECRET: "${CLIENT_SECRET}"
   OAUTH2_PROXY_COOKIE_SECRET: "${COOKIE_SECRET}"
 EOF
-    SOPS_AGE_KEY_FILE="{{AGE_KEY}}" sops --encrypt \
-      "$PLAIN" > "{{SSO_DIR}}/${APP}-secrets.sops.yaml"
+    SOPS_AGE_KEY_FILE="{{AGE_KEY}}" sops --encrypt "$PLAIN" > "{{SSO_DIR}}/${APP}-secrets.sops.yaml"
 
     echo "Secret rotated and re-encrypted: infra/k8s/oauth2-proxy/${APP}-secrets.sops.yaml"
     echo "Push to git then force a rollout:"
