@@ -17,6 +17,44 @@ metadata:
 
 **Files**: `infra/k8s/argocd/values.yaml`
 
+## ArgoCD Consolidation: argocd-self → argocd (completed 2026-09-12)
+
+The bootstrap `argocd-self` instance has been removed. ArgoCD is now a single self-managed helm release (`argocd`, revision 12). `argocd-server` holds `192.168.30.202`.
+
+**Pitfall 1 — Name-pattern bulk delete wipes non-self SAs**
+`kubectl get all,sa,... | awk '/argocd-self/' | xargs kubectl delete` matched non-prefixed argocd-* ServiceAccounts (application-controller, server, etc.) that appeared adjacent in the list output. Always use label selectors: `-l app.kubernetes.io/instance=argocd-self`. Never use name-pattern grep for bulk delete in the argocd namespace.
+
+**Pitfall 2 — Helm upgrade SSA field manager conflict**
+After SA deletion, `helm upgrade` fails with "conflict with argocd-controller" on ConfigMaps/Secrets (ArgoCD owns those fields via SSA). Fix:
+```bash
+helm template argocd argo/argo-cd --version 10.4.2 -n argocd \
+  -f infra/k8s/argocd/values.yaml \
+  | kubectl apply --server-side --force-conflicts -n argocd -f -
+```
+
+**Pitfall 3 — SSA restore wipes argocd-secret data**
+The `helm template | kubectl apply --server-side --force-conflicts` approach recreates `argocd-secret` with empty data (chart template has no values). Dex crashes with `server.secretkey is missing`. Fix: patch after restore:
+```bash
+SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+kubectl patch secret argocd-secret -n argocd \
+  --type=json \
+  -p="[{\"op\":\"add\",\"path\":\"/data\",\"value\":{\"server.secretkey\":\"$(echo -n $SECRET_KEY | base64)\"}}]"
+```
+Then restart Dex and argocd-server.
+
+**Pitfall 4 — root recreates argocd-self after controller restart**
+`root` has `selfHeal: true`. When the controller restarted after our cleanup, it had a cached git state that still included `argocd-self.yaml` and recreated the Application. After the controller reconciled against the latest git commit (which removed the file), it stopped. Patch out the finalizer and delete twice if needed:
+```bash
+kubectl patch application argocd-self -n argocd -p '{"metadata":{"finalizers":[]}}' --type=merge
+kubectl delete application argocd-self -n argocd
+```
+
+**Pitfall 5 — Dex crashes if Kanidm is not yet ready at startup**
+Dex fetches Kanidm's OIDC discovery document at startup. If Kanidm is still coming up (502), Dex crashes with `failed to open all connectors (1/1)` and never starts its gRPC server. This causes 502 on the ArgoCD OIDC callback. Fix: restart Dex after Kanidm is healthy:
+```bash
+kubectl rollout restart deployment/argocd-dex-server -n argocd
+```
+
 ## DragonflyDB as ArgoCD Redis replacement
 
 **What**: ArgoCD uses DragonflyDB (Redis-compatible) cluster instead of built-in Redis.
