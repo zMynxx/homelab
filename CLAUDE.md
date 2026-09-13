@@ -110,14 +110,12 @@ Not a networking or Cilium issue.
 ## Full Documentation
 See `infra/docs/CILIUM_ISTIO_AMBIENT_SETUP.md` for detailed setup guide and troubleshooting.
 
-### 6. Longhorn engine binary split-namespace issue on turingpi-4 (NVMe at /var/lib/longhorn)
-On turingpi-4, `/dev/nvme0n1` is mounted at `/var/lib/longhorn` on the HOST, but Talos's kubelet runs in an isolated mount namespace where `/var/lib/longhorn` is the SD card.
-- Engine-image DaemonSet pod (no `mountPropagation`) inherits kubelet namespace → writes binary to SD card view
-- Instance-manager uses `HostToContainer` → reads from HOST namespace → sees NVMe, not SD card → binary missing
-- Symptom: instance manager logs `stat /host/var/lib/longhorn/engine-binaries/.../longhorn: no such file or directory`, all replicas stay `stopped`, all volumes fault
-- **Permanent fix**: `infra/k8s/longhorn/engine-binary-sync-tp4.yaml` — a DaemonSet (nodeSelector: turingpi-4) with `privileged: true` + `Bidirectional` mountPropagation that copies the binary into the HOST (NVMe) namespace on every pod start. Idempotent — skips if binary already present.
-- On Longhorn version upgrade: update the image tag AND hostPath version suffix in `engine-binary-sync-tp4.yaml`
-- Do NOT add `kubelet.extraMounts` with `rshared` for `/var/lib/longhorn` — it creates a third namespace layer and makes the split worse
+### 6. Longhorn storage path — UserVolumeConfig on NVMe (Talos v1.13+)
+All nodes have `/dev/nvme0n1` provisioned via `UserVolumeConfig` (see `infra/talos/patches/nvme-storage.yaml`) and mounted at `/var/mnt/longhorn`. The mount is propagated into kubelet via `extraMounts` with `rshared`.
+- Longhorn `defaultDataPath` is `/var/mnt/longhorn` (see `infra/k8s/longhorn/values.yaml`)
+- This resolves the split-namespace problem that previously caused engine binaries to be invisible to the instance-manager when using `/var/lib/longhorn`
+- On Longhorn version upgrade: no special action needed — UserVolumeConfig handles the mount correctly
+- Do NOT revert to `/var/lib/longhorn` — that path is the SD card in kubelet's namespace, not the NVMe
 
 ## Agent skills
 

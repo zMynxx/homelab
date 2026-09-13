@@ -11,6 +11,7 @@ additionalApiServerCertSans:
   - turingpi.homelab.internal
 patches:
   - patches/all-nodes.yaml
+  - patches/nvme-storage.yaml
 controlPlane:
   patches:
     - patches/controlplane.yaml

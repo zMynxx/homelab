@@ -1,0 +1,25 @@
+---
+# Propagate the UserVolume mount into kubelet so Longhorn can access it.
+# The rshared option ensures mount propagation works correctly.
+machine:
+  kubelet:
+    extraMounts:
+      - destination: /var/mnt/longhorn
+        type: bind
+        source: /var/mnt/longhorn
+        options:
+          - bind
+          - rshared
+          - rw
+---
+# Talos v1.13+ UserVolumeConfig: allocates the NVMe as a Talos-managed partition
+# mounted at /var/mnt/longhorn. This is the correct approach per Talos v1.10+ docs
+# and avoids the kubelet/host split-namespace problem with /var/lib/longhorn.
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: longhorn
+provisioning:
+  diskSelector:
+    match: disk.transport == "nvme"
+  minSize: 10GB
+  grow: true
