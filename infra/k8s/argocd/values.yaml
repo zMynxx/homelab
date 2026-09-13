@@ -68,7 +68,10 @@ configs:
           enablePKCE: true
 
   rbac:
-    policy.default: role:admin
+    policy.default: role:readonly
+    policy.csv: |
+      g, argocd_users, role:admin
+    scopes: '[groups, email]'
 
   # SOPS CMP plugin: decrypts raw *.sops.yaml Secret manifests
   cmp:
