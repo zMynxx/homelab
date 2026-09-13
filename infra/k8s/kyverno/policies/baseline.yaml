@@ -111,6 +111,12 @@ spec:
           spec:
             containers:
               - image: "!*:latest"
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kanidm
+                - kaniop
 ---
 # Require CPU/memory resource limits on all containers.
 apiVersion: kyverno.io/v1
