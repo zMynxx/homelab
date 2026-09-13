@@ -1,0 +1,14 @@
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmPersonAccount
+metadata:
+  name: lior
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  username: lior
+  displayName: Lior Dux
+  email: lior.dux@develeap.com
+  mailPrimary: lior.dux@develeap.com
+  # Memberof groups - added after user creation via separate patch or manage in group membership

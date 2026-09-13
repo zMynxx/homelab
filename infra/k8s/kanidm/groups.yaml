@@ -1,0 +1,59 @@
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmGroup
+metadata:
+  name: grafana-users
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  name: grafana_users
+  displayName: Grafana Users
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmGroup
+metadata:
+  name: longhorn-users
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  name: longhorn_users
+  displayName: Longhorn Users
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmGroup
+metadata:
+  name: zot-users
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  name: zot_users
+  displayName: Zot Registry Users
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmGroup
+metadata:
+  name: hubble-users
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  name: hubble_users
+  displayName: Cilium Hubble Viewers
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmGroup
+metadata:
+  name: kiali-users
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  name: kiali_users
+  displayName: Kiali Viewers

@@ -1,0 +1,69 @@
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: grafana
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  name: grafana
+  displayName: Grafana
+  redirectUris:
+    - https://grafana.opnsense.internal/oauth2/callback
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: longhorn
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  name: longhorn
+  displayName: Longhorn
+  redirectUris:
+    - https://longhorn.opnsense.internal/oauth2/callback
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: zot
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  name: zot
+  displayName: Zot
+  redirectUris:
+    - https://zot.opnsense.internal/oauth2/callback
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: hubble
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  name: hubble
+  displayName: Cilium Hubble
+  redirectUris:
+    - https://hubble.opnsense.internal/oauth2/callback
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: kiali
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  name: kiali
+  displayName: Kiali
+  redirectUris:
+    - https://kiali.opnsense.internal/oauth2/callback
