@@ -115,9 +115,9 @@ repoServer:
       args:
         - |
           set -e
-          echo "Downloading sops v3.10.2 (arm64)..."
+          echo "Downloading sops v3.13.0 (arm64)..."
           wget -qO /custom-tools/sops \
-            https://github.com/getsops/sops/releases/download/v3.10.2/sops-v3.10.2.linux.arm64
+            https://github.com/getsops/sops/releases/download/v3.13.0/sops-v3.13.0.linux.arm64
           chmod +x /custom-tools/sops
 
           echo "Downloading ksops v4.3.3 (arm64)..."
