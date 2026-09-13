@@ -132,7 +132,7 @@ spec:
   redirectUrl:
     - https://argocd.opnsense.internal/api/dex/callback
   scopeMap:
-    - group: argocd_users
+    - group: argocd-users
       scopes:
         - openid
         - email

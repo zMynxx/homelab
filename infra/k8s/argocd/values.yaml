@@ -70,7 +70,7 @@ configs:
   rbac:
     policy.default: role:readonly
     policy.csv: |
-      g, argocd_users, role:admin
+      g, argocd-users@kanidm.opnsense.internal, role:admin
     scopes: '[groups, email]'
 
   # SOPS CMP plugin: decrypts raw *.sops.yaml Secret manifests
