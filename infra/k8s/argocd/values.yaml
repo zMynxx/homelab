@@ -85,6 +85,10 @@ configs:
           command: [sh, -c]
           args:
             - |
+              find . -maxdepth 3 -name '*.yaml' ! -name '*.sops.yaml' | sort | while read f; do
+                cat "$f"
+                echo "---"
+              done
               find . -maxdepth 3 -name '*.sops.yaml' | sort | while read f; do
                 /usr/local/bin/sops --decrypt "$f"
                 echo "---"
