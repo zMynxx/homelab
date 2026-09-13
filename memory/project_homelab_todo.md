@@ -1,7 +1,7 @@
 # Homelab TODO — Future Sessions
 
 ## SSO / OIDC
-1. Set logo for oauth2-proxy on Kanidm
+1. ~~Set logo for oauth2-proxy on Kanidm~~ ✓
 2. Verify AdGuard OIDC works
 3. Set up OIDC for the rest of the services (Longhorn UI, Cilium Hubble, Grafana UI, Istio UI, Zot UI, etc — everything with a UI)
 4. Set homelab CA certs for OPNsense behind Caddy, and set up OIDC

@@ -56,6 +56,17 @@ machine:
           - https://zot.registry.svc.cluster.local:5000
           - https://reg.kyverno.io
 
+# Mount NVMe at /storage for Longhorn (Turing Pi 2 documented path)
+# The NVMe (/dev/nvme0n1) is mounted at /storage on the HOST, while kubelet
+# runs in isolated mount namespace where /storage is the SD card. This mount
+# ensures Longhorn instance-manager can access binaries written by engine-image.
+  mounts:
+    - destination: /storage
+      type: ext4
+      source: /dev/nvme0n1
+      options:
+        - defaults
+
 # Disable kube-proxy — Cilium replaces it via eBPF.
 # NOTE: forwardKubeDNSToHost is intentionally NOT set here. The running
 # cluster uses the default (true); the previous override at the wrong schema

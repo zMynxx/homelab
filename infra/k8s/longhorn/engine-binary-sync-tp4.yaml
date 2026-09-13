@@ -1,8 +1,8 @@
 ---
 # Permanent fix for Longhorn engine binary split-namespace issue on ALL nodes.
 #
-# Root cause: All TuringPi nodes have /dev/nvme0n1 mounted at /var/lib/longhorn on the HOST,
-# but the kubelet runs in an isolated mount namespace where /var/lib/longhorn is the SD card.
+# Root cause: All TuringPi nodes have /dev/nvme0n1 mounted at /storage on the HOST,
+# but the kubelet runs in an isolated mount namespace where /storage is the SD card.
 # The engine-image DaemonSet (no mountPropagation) writes the binary into the SD card view.
 # The instance-manager uses HostToContainer and reads from the HOST NVMe view. They disagree,
 # so the binary is invisible to the instance-manager.
@@ -61,5 +61,5 @@ spec:
       volumes:
         - name: engine-binaries
           hostPath:
-            path: /var/lib/longhorn/engine-binaries/docker.io-longhornio-longhorn-engine-v1.12.1
+            path: /storage/engine-binaries/docker.io-longhornio-longhorn-engine-v1.12.1
             type: DirectoryOrCreate

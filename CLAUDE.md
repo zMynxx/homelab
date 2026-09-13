@@ -118,3 +118,13 @@ On turingpi-4, `/dev/nvme0n1` is mounted at `/var/lib/longhorn` on the HOST, but
 - **Permanent fix**: `infra/k8s/longhorn/engine-binary-sync-tp4.yaml` — a DaemonSet (nodeSelector: turingpi-4) with `privileged: true` + `Bidirectional` mountPropagation that copies the binary into the HOST (NVMe) namespace on every pod start. Idempotent — skips if binary already present.
 - On Longhorn version upgrade: update the image tag AND hostPath version suffix in `engine-binary-sync-tp4.yaml`
 - Do NOT add `kubelet.extraMounts` with `rshared` for `/var/lib/longhorn` — it creates a third namespace layer and makes the split worse
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs for this repo live as GitHub issues, tracked via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
