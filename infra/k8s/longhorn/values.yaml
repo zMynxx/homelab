@@ -1,12 +1,12 @@
 # Longhorn — distributed block storage on Talos (RK1 / Turing Pi 2)
 #
 # Backend for the observability stack (VictoriaMetrics/VictoriaLogs/Tempo PVCs).
-# Storage uses /storage mount point on each node (NVMe or internal storage).
-# Following Turing Pi 2 docs: /storage is created on all nodes via Talos config,
-# and the NVMe (/dev/nvme0n1) is mounted there via /etc/fstab equivalents.
-# iscsi-tools + util-linux-tools are already in the node image.
+# Storage uses the dedicated 256 GB NVMe (/dev/nvme0n1) as a RAW BLOCK DEVICE
+# disk (added per-node after install), since Talos's UserVolumeConfig is not
+# functional on this build. iscsi-tools + util-linux-tools are already in the
+# node image.
 defaultSettings:
-  defaultDataPath: /storage
+  defaultDataPath: /var/lib/longhorn
   defaultReplicaCount: 2
   storageOverProvisioningPercentage: 100
   storageMinimalAvailablePercentage: 10
