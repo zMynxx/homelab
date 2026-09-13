@@ -21,10 +21,6 @@ spec:
                     values:
                       - turingpi-1
   logLevel: info
-  service:
-    type: LoadBalancer
-    annotations:
-      lbipam.cilium.io/ips: "192.168.30.201"
   storage:
     volumeClaimTemplate:
       spec:
