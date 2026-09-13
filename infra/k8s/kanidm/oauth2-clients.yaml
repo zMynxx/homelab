@@ -37,6 +37,8 @@ spec:
         - openid
         - email
         - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/grafana.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -57,6 +59,8 @@ spec:
         - openid
         - email
         - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/longhorn.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -77,6 +81,8 @@ spec:
         - openid
         - email
         - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/zot.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -97,6 +103,8 @@ spec:
         - openid
         - email
         - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/cilium.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -117,6 +125,8 @@ spec:
         - openid
         - email
         - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/kiali.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
