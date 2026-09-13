@@ -1,13 +1,12 @@
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: zot
   namespace: registry
   labels:
     app.kubernetes.io/name: zot
 spec:
-  replicas: 3
   selector:
     matchLabels:
       app.kubernetes.io/name: zot

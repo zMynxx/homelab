@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/name: kanidm
 spec:
   serviceName: kanidm-headless
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app.kubernetes.io/name: kanidm
