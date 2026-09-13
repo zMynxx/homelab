@@ -5,6 +5,7 @@ metadata:
   name: kanidm
   namespace: kanidm
 spec:
+  image: kanidm/server:1.11.2
   domain: kanidm.opnsense.internal
   replicaGroups:
     - name: default
