@@ -8,8 +8,6 @@ metadata:
 spec:
   kanidmRef:
     name: kanidm
-  name: grafana_users
-  displayName: Grafana Users
   members:
     - lior
 
@@ -22,8 +20,6 @@ metadata:
 spec:
   kanidmRef:
     name: kanidm
-  name: longhorn_users
-  displayName: Longhorn Users
   members:
     - lior
 
@@ -36,8 +32,6 @@ metadata:
 spec:
   kanidmRef:
     name: kanidm
-  name: zot_users
-  displayName: Zot Registry Users
   members:
     - lior
 
@@ -50,8 +44,6 @@ metadata:
 spec:
   kanidmRef:
     name: kanidm
-  name: hubble_users
-  displayName: Cilium Hubble Viewers
   members:
     - lior
 
@@ -64,7 +56,5 @@ metadata:
 spec:
   kanidmRef:
     name: kanidm
-  name: kiali_users
-  displayName: Kiali Viewers
   members:
     - lior
