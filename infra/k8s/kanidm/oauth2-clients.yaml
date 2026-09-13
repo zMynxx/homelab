@@ -7,10 +7,9 @@ metadata:
 spec:
   kanidmRef:
     name: kanidm
-  name: grafana
-  displayName: Grafana
+  displayname: Grafana
   origin: https://grafana.opnsense.internal
-  redirectUris:
+  redirectUrl:
     - https://grafana.opnsense.internal/oauth2/callback
   image:
     url: https://raw.githubusercontent.com/develeap/homelab/main/infra/k8s/kanidm/logos/grafana.png
@@ -24,10 +23,9 @@ metadata:
 spec:
   kanidmRef:
     name: kanidm
-  name: longhorn
-  displayName: Longhorn
+  displayname: Longhorn
   origin: https://longhorn.opnsense.internal
-  redirectUris:
+  redirectUrl:
     - https://longhorn.opnsense.internal/oauth2/callback
   image:
     url: https://raw.githubusercontent.com/develeap/homelab/main/infra/k8s/kanidm/logos/longhorn.png
@@ -41,10 +39,9 @@ metadata:
 spec:
   kanidmRef:
     name: kanidm
-  name: zot
-  displayName: Zot
+  displayname: Zot
   origin: https://zot.opnsense.internal
-  redirectUris:
+  redirectUrl:
     - https://zot.opnsense.internal/oauth2/callback
   image:
     url: https://raw.githubusercontent.com/develeap/homelab/main/infra/k8s/kanidm/logos/zot.png
@@ -58,12 +55,10 @@ metadata:
 spec:
   kanidmRef:
     name: kanidm
-  name: hubble
-  displayName: Cilium Hubble
+  displayname: Cilium Hubble
   origin: https://hubble.opnsense.internal
-  redirectUris:
+  redirectUrl:
     - https://hubble.opnsense.internal/oauth2/callback
-  # Logo: Download from Cilium project or add manually in Kanidm UI
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -74,9 +69,7 @@ metadata:
 spec:
   kanidmRef:
     name: kanidm
-  name: kiali
-  displayName: Kiali
+  displayname: Kiali
   origin: https://kiali.opnsense.internal
-  redirectUris:
+  redirectUrl:
     - https://kiali.opnsense.internal/oauth2/callback
-  # Logo: Download from Kiali project or add manually in Kanidm UI
