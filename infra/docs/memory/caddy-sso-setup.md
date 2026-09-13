@@ -84,10 +84,29 @@ Key args:
 All `*.opnsense.internal` → `192.168.30.1` (VLAN30 gateway, reachable from client at 192.168.30.101)
 **NOT 192.168.10.1** (MGMT VLAN, unreachable from VLAN30 clients)
 
-## ArgoCD OIDC with Kanidm via Dex (WORKING as of 2026-09-12)
+## SSO App Pattern (WORKING as of 2026-09-13)
 
-ArgoCD uses Dex as OIDC intermediary → Kanidm. OIDC login is confirmed working.
-See `infra/docs/memory/argocd-oidc-setup.md` for full architecture and troubleshooting.
+Each app gets a dedicated Kanidm oauth2 client + group. Only group members can obtain a token (Kanidm scope-map enforces this at IdP level). Each app gets a dedicated oauth2-proxy Deployment + LB IP + Caddy vhost.
+
+Provisioning helper: `just sso-add-app <app> <display> <lb_ip> <upstream>`
+Logic lives in `just/sso-provision.sh` (heredocs cannot live in just recipes — parser bug with column-0 content).
+
+| App      | Kanidm client | Group          | LB IP          | Caddy conf                          |
+|----------|---------------|----------------|----------------|-------------------------------------|
+| argocd   | argocd        | argocd_users   | 192.168.30.203 | caddy.d/argocd.conf (manual .conf)  |
+| adguard  | adguard       | adguard_users  | 192.168.30.204 | caddy.d/adguard.conf                |
+
+ArgoCD RBAC: `policy.default: role:readonly`, `g, argocd_users, role:admin` (values.yaml:70-74).
+ArgoCD uses Dex as OIDC intermediary → Kanidm (PKCE required, native ArgoCD OIDC lacks it).
+
+Logo upload: `kanidm system oauth2 set-image <app> /path/to/logo.png`
+- Image must be PNG/WEBP/SVG, square, under 96KiB
+- AVIF files disguised as .png must be converted: `sips -s format png input --out output`
+- Resize if needed: `sips -z 256 256 input.png --out output.png`
+
+SOPS note: temp files for sops encryption must have `.sops.yaml` extension so creation rules match.
+
+See `infra/docs/memory/argocd-oidc-setup.md` for full Dex/OIDC architecture and troubleshooting.
 
 ## OPNsense API (from OPNsense SSH session only)
 Use `https://127.0.0.1:8443/api/` — external interfaces don't accept API from VLAN30.
