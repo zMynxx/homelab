@@ -11,8 +11,6 @@ spec:
   origin: https://grafana.opnsense.internal
   redirectUrl:
     - https://grafana.opnsense.internal/oauth2/callback
-  image:
-    url: https://raw.githubusercontent.com/develeap/homelab/main/infra/k8s/kanidm/logos/grafana.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -27,8 +25,6 @@ spec:
   origin: https://longhorn.opnsense.internal
   redirectUrl:
     - https://longhorn.opnsense.internal/oauth2/callback
-  image:
-    url: https://raw.githubusercontent.com/develeap/homelab/main/infra/k8s/kanidm/logos/longhorn.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -43,8 +39,6 @@ spec:
   origin: https://zot.opnsense.internal
   redirectUrl:
     - https://zot.opnsense.internal/oauth2/callback
-  image:
-    url: https://raw.githubusercontent.com/develeap/homelab/main/infra/k8s/kanidm/logos/zot.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
