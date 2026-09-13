@@ -6,3 +6,4 @@
 - [Always use Kubernetes FQDNs](feedback_fqdn.md) — Use full `<svc>.<ns>.svc.cluster.local` form everywhere, never bare short service names
 - [ExternalDNS AdGuard integration TODO](project_externaldns_todo.md) — ArgoCD app deployed (chart 1.22.0, webhook provider), 5 remaining steps before it's functional
 - [Homelab TODO — Future Sessions](project_homelab_todo.md) — 14 items: SSO/OIDC for all UIs, Caddy/TinyCA PKI, ExternalDNS AdGuard, HA, docs/scripts, OpenChoreo eval
+- [Kanidm full recovery 2026-09-14](kanidm-oauth2-recovery-2026-09.md) — kaniop bootstrap fix, group conflict fix, all 7 OAuth2 clients + logos restored, ArgoCD OIDC + RBAC fixed
