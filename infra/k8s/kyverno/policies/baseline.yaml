@@ -44,6 +44,7 @@ spec:
                 - databases
                 - kanidm
                 - oauth2-proxy
+                - kaniop
 ---
 # Disallow privileged containers.
 apiVersion: kyverno.io/v1
@@ -88,6 +89,7 @@ spec:
                 - databases
                 - kanidm
                 - oauth2-proxy
+                - kaniop
 ---
 # Block the :latest tag to force immutable image references.
 apiVersion: kyverno.io/v1
@@ -155,6 +157,7 @@ spec:
                 - databases
                 - kanidm
                 - oauth2-proxy
+                - kaniop
 ---
 # Disallow NodePort services (ingress must go through Istio Gateway).
 apiVersion: kyverno.io/v1
