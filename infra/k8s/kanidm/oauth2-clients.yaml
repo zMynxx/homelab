@@ -12,6 +12,8 @@ spec:
   origin: https://grafana.opnsense.internal
   redirectUris:
     - https://grafana.opnsense.internal/oauth2/callback
+  image:
+    url: https://raw.githubusercontent.com/develeap/homelab/main/infra/k8s/kanidm/logos/grafana.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -27,6 +29,8 @@ spec:
   origin: https://longhorn.opnsense.internal
   redirectUris:
     - https://longhorn.opnsense.internal/oauth2/callback
+  image:
+    url: https://raw.githubusercontent.com/develeap/homelab/main/infra/k8s/kanidm/logos/longhorn.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -42,6 +46,8 @@ spec:
   origin: https://zot.opnsense.internal
   redirectUris:
     - https://zot.opnsense.internal/oauth2/callback
+  image:
+    url: https://raw.githubusercontent.com/develeap/homelab/main/infra/k8s/kanidm/logos/zot.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -57,6 +63,7 @@ spec:
   origin: https://hubble.opnsense.internal
   redirectUris:
     - https://hubble.opnsense.internal/oauth2/callback
+  # Logo: Download from Cilium project or add manually in Kanidm UI
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -72,3 +79,4 @@ spec:
   origin: https://kiali.opnsense.internal
   redirectUris:
     - https://kiali.opnsense.internal/oauth2/callback
+  # Logo: Download from Kiali project or add manually in Kanidm UI
