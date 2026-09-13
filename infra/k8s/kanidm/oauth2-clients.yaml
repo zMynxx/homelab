@@ -17,6 +17,8 @@ spec:
         - openid
         - email
         - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/oauth2proxy.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -148,3 +150,6 @@ spec:
         - email
         - profile
         - groups
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/argocd.png
+
