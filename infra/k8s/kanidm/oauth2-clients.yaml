@@ -9,6 +9,7 @@ spec:
     name: kanidm
   name: grafana
   displayName: Grafana
+  origin: https://grafana.opnsense.internal
   redirectUris:
     - https://grafana.opnsense.internal/oauth2/callback
 
@@ -23,6 +24,7 @@ spec:
     name: kanidm
   name: longhorn
   displayName: Longhorn
+  origin: https://longhorn.opnsense.internal
   redirectUris:
     - https://longhorn.opnsense.internal/oauth2/callback
 
@@ -37,6 +39,7 @@ spec:
     name: kanidm
   name: zot
   displayName: Zot
+  origin: https://zot.opnsense.internal
   redirectUris:
     - https://zot.opnsense.internal/oauth2/callback
 
@@ -51,6 +54,7 @@ spec:
     name: kanidm
   name: hubble
   displayName: Cilium Hubble
+  origin: https://hubble.opnsense.internal
   redirectUris:
     - https://hubble.opnsense.internal/oauth2/callback
 
@@ -65,5 +69,6 @@ spec:
     name: kanidm
   name: kiali
   displayName: Kiali
+  origin: https://kiali.opnsense.internal
   redirectUris:
     - https://kiali.opnsense.internal/oauth2/callback
