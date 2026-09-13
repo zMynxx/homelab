@@ -26,15 +26,6 @@ global:
 applicationController:
   networkPolicy:
     create: false
-repoServer:
-  networkPolicy:
-    create: false
-server:
-  networkPolicy:
-    create: false
-notifications:
-  networkPolicy:
-    create: false
 
 configs:
   params:
@@ -96,6 +87,8 @@ configs:
 
 # ── repo-server ───────────────────────────────────────────────────────────────
 repoServer:
+  networkPolicy:
+    create: false
   volumes:
     - name: custom-tools
       emptyDir: {}
@@ -201,6 +194,8 @@ repoServer:
 
 # ── other components ──────────────────────────────────────────────────────────
 server:
+  networkPolicy:
+    create: false
   service:
     type: LoadBalancer
     annotations:
@@ -223,6 +218,8 @@ applicationSet:
       memory: 128Mi
 
 notifications:
+  networkPolicy:
+    create: false
   resources:
     requests:
       cpu: 10m
