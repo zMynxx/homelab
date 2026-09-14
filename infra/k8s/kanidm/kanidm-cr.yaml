@@ -9,7 +9,7 @@ spec:
   domain: kanidm.opnsense.internal
   replicaGroups:
     - name: default
-      replicas: 1
+      replicas: 3
       primaryNode: true
   logLevel: info
   storage:
