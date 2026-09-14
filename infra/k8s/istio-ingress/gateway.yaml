@@ -9,6 +9,21 @@ spec:
     app: istio-ingressgateway
   servers:
     - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: istio-ingress-tls
+      hosts:
+        - "*.opnsense.internal"
+    - port:
         number: 8443
         name: tls-kanidm
         protocol: TLS
