@@ -15,13 +15,4 @@ spec:
             host: kanidm.kanidm.svc.cluster.local
             port:
               number: 8443
-  tls:
-    - match:
-        - port: 8443
-          sniHosts:
-            - kanidm.opnsense.internal
-      route:
-        - destination:
-            host: kanidm.kanidm.svc.cluster.local
-            port:
-              number: 8443
+

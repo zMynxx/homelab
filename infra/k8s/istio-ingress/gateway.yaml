@@ -23,11 +23,4 @@ spec:
         credentialName: istio-ingress-tls
       hosts:
         - "*.opnsense.internal"
-    - port:
-        number: 8443
-        name: tls-kanidm
-        protocol: TLS
-      tls:
-        mode: PASSTHROUGH
-      hosts:
-        - kanidm.opnsense.internal
+
