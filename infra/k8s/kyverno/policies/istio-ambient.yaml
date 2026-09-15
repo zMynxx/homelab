@@ -26,6 +26,7 @@ spec:
                 - kube-public
                 - kube-node-lease
                 - istio-system
+                - istio-ingress
                 - cilium-secrets
                 - kyverno
                 - longhorn-system
@@ -43,6 +44,7 @@ spec:
                     - kube-public
                     - kube-node-lease
                     - istio-system
+                    - istio-ingress
                     - cilium-secrets
                     - kyverno
                     - longhorn-system
