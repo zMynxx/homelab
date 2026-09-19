@@ -26,6 +26,10 @@ securityContext:
       add: []
     customContainerSecurityContext:
       allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 13001
+      runAsGroup: 13001
+      privileged: false
 
 resources:
   requests:
