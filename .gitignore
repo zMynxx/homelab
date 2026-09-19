@@ -9,6 +9,8 @@
 **/**/*secret*
 !**/**/*.sops.*
 !**/**/*.sops.bin
+!gitops/infrastructure/wave-0/sops-secrets-operator
+!gitops/infrastructure/wave-0/sops-secrets-operator/**
 Ansible/00-Init/ansible
 Ansible/01-Passthrough/ansible
 

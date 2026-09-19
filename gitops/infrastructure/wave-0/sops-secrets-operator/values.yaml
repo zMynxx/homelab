@@ -1,0 +1,12 @@
+# Age key mounted from a Secret created during bootstrap (before ArgoCD syncs):
+#   kubectl create secret generic sops-age-key \
+#     -n sops-secrets-operator --create-namespace \
+#     --from-file=key.txt=key.txt.secret
+secretsAsFiles:
+  - name: age-key
+    mountPath: /tmp/sops-age
+    secretName: sops-age-key
+
+extraEnv:
+  - name: SOPS_AGE_KEY_FILE
+    value: /tmp/sops-age/key.txt
