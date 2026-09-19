@@ -8,5 +8,4 @@ helmCharts:
     releaseName: *name
     namespace: longhorn-system
     valuesFile: values.yaml
-resources:
-  - nvme-wipe.yaml
+resources: []

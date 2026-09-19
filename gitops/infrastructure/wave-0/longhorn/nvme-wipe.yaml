@@ -24,6 +24,9 @@ spec:
     spec:
       tolerations:
         - operator: Exists
+      # IMPORTANT: always set nodeSelector before enabling — this DaemonSet wipes /dev/nvme0n1 on every matched node
+      nodeSelector:
+        kubernetes.io/hostname: CHANGE_ME
       containers:
         - name: wipe
           image: busybox:1.36
