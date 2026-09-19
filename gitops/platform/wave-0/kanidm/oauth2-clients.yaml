@@ -18,7 +18,7 @@ spec:
         - email
         - profile
   image:
-    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/oauth2proxy.png
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/logos/oauth2proxy.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -40,7 +40,7 @@ spec:
         - email
         - profile
   image:
-    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/grafana.png
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/logos/grafana.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -62,7 +62,7 @@ spec:
         - email
         - profile
   image:
-    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/longhorn.png
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/logos/longhorn.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -84,7 +84,7 @@ spec:
         - email
         - profile
   image:
-    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/zot.png
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/logos/zot.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -106,7 +106,7 @@ spec:
         - email
         - profile
   image:
-    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/cilium.png
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/logos/cilium.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -128,7 +128,7 @@ spec:
         - email
         - profile
   image:
-    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/kiali.png
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/logos/kiali.png
 
 ---
 apiVersion: kaniop.rs/v1beta1
@@ -151,5 +151,5 @@ spec:
         - profile
         - groups
   image:
-    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/argocd.png
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/logos/argocd.png
 
