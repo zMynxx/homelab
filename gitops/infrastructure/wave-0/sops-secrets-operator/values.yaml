@@ -31,6 +31,8 @@ securityContext:
       runAsGroup: 13001
       privileged: false
 
+enforceOwnership: true
+
 resources:
   requests:
     cpu: 10m
