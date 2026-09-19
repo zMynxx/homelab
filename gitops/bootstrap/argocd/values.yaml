@@ -70,8 +70,14 @@ configs:
     plugins:
       sops:
         discover:
-          find:
-            glob: "**/*.sops.yaml"
+          # Only claim dirs that have *.sops.yaml but NO kustomization.yaml.
+          # Kustomize+SOPS dirs use ksops via --enable-exec instead.
+          command: [sh, -c]
+          args:
+            - |
+              has_sops=$(find . -maxdepth 1 -name '*.sops.yaml' 2>/dev/null | head -1)
+              has_kust=$(find . -maxdepth 1 \( -name 'kustomization.yaml' -o -name 'kustomization.yml' \) 2>/dev/null | head -1)
+              [ -n "$has_sops" ] && [ -z "$has_kust" ]
         generate:
           command: [sh, -c]
           args:
