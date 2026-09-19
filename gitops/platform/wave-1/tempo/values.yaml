@@ -1,0 +1,46 @@
+# Grafana Tempo - monolithic mode
+# Receives traces via OTLP from OTel Collector.
+# Pinned to turingpi-3 via affinity preference.
+
+tempo:
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+      wal:
+        path: /var/tempo/wal
+
+  retention: 168h  # 7 days
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node-role
+                operator: In
+                values:
+                  - heavy
+
+persistence:
+  enabled: true
+  storageClassName: longhorn
+  size: 10Gi
+
+# Service ports
+service:
+  type: ClusterIP
+
+# Expose OTLP gRPC for OTel Collector
+tempoQuery:
+  enabled: false  # Not needed; Grafana queries Tempo directly

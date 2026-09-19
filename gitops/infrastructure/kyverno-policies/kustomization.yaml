@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - allow-hbone-in-networkpolicies.yaml
+  - baseline.yaml
+  - istio-ambient-rbac.yaml
+  - istio-ambient.yaml

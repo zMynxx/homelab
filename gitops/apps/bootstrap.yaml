@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: bootstrap
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - name: dragonfly-operator
+            namespace: dragonfly-operator-system
+            path: gitops/bootstrap/dragonfly-operator
+            syncWave: "0"
+          - name: dragonfly
+            namespace: argocd
+            path: gitops/bootstrap/dragonfly
+            syncWave: "1"
+          - name: argocd-oidc
+            namespace: argocd
+            path: gitops/bootstrap/argocd/oidc
+            syncWave: "1"
+          - name: argocd-policies
+            namespace: argocd
+            path: gitops/bootstrap/argocd/policies
+            syncWave: "1"
+  template:
+    metadata:
+      name: '{{.name}}'
+      namespace: argocd
+      annotations:
+        argocd.argoproj.io/sync-wave: '{{.syncWave}}'
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/zmynxx/homelab.git
+        targetRevision: main
+        path: '{{.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

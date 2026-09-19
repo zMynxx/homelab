@@ -1,0 +1,17 @@
+---
+# ClusterIssuer backed by TinyCA (step-ca) ACME. Certificates chain to the
+# Homelab Root CA (YubiKey-backed). caBundle trusts step-ca's self-signed TLS.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: step-ca-issuer
+spec:
+  acme:
+    server: https://192.168.10.37:8443/acme/acme/directory
+    privateKeySecretRef:
+      name: step-ca-account-key
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJ0akNDQVR1Z0F3SUJBZ0lSQUlTbGVya21rSThIeXFTYlpmWk8xNmd3Q2dZSUtvWkl6ajBFQXdNd0dqRVkKTUJZR0ExVUVBeE1QU0c5dFpXeGhZaUJTYjI5MElFTkJNQjRYRFRJMk1EUXlNakl3TVRZMU1Wb1hEVE0yTURReApPVEl3TVRZMU1Wb3dHakVZTUJZR0ExVUVBeE1QU0c5dFpXeGhZaUJTYjI5MElFTkJNSFl3RUFZSEtvWkl6ajBDCkFRWUZLNEVFQUNJRFlnQUU1NTRwMU5PTU5DRFpLSk9US3NBeW5renZXeEgxWUhIdTNheTYzSk1nVDNNLy9QVFkKa1NENkZpMDBsYmlkMnVTcWRIRCtKNXp4UHFpL3RWamVta09ySkxBWVlxSXZmM2xja3JZbk9xZ001WVJjZkNzZgppYk5LVEd2Qy80S1EydzRBbzBVd1F6QU9CZ05WSFE4QkFmOEVCQU1DQVFZd0VnWURWUjBUQVFIL0JBZ3dCZ0VCCi93SUJBVEFkQmdOVkhRNEVGZ1FVc2J0QUhUMTE3UWZmck1zRXV4L3NTZXhOR2Nnd0NnWUlLb1pJemowRUF3TUQKYVFBd1pnSXhBUFVUdWZKOHlscUpLN2JxTkhkQWxUd2pVaURoS3B5Nm1DODJadTUybnZ2TFRUUml1K1k2MFNHUgpBYzVvbDB4YWVBSXhBUE40MkdaUnU5Z3hIenRxc0Uwck5ZLzJoclhvbEh2bW1Iem1CWUVGc3NQM0MwSXE2czByCjFmYjJZcE51c3IwbDJBPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    solvers:
+      - http01:
+          ingress:
+            class: istio

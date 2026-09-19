@@ -1,0 +1,41 @@
+---
+# TLS certificate for Zot, issued from the Homelab intermediate CA
+# (secret `istio-ca`, which chains to the YubiKey-backed Homelab Root CA).
+# We use a CA-type ClusterIssuer (homelab-ca) instead of the ACME step-ca-issuer
+# because the ACME http01 solver cannot validate an internal
+# *.svc.cluster.local name. The resulting secret `zot-tls` is mounted into the
+# Zot pod (see zot/values.yaml -> zot.tls.secretName).
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: zot
+  namespace: registry
+spec:
+  secretName: zot-tls
+  duration: 8760h      # 1 year
+  renewBefore: 720h    # renew 30 days before expiry
+  commonName: zot.registry.svc.cluster.local
+  dnsNames:
+    - zot.registry.svc.cluster.local
+    - zot.registry.svc
+    - zot
+  usages:
+    - server auth
+    - client auth
+  issuerRef:
+    name: homelab-ca
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+# CA-type ClusterIssuer backed by the existing `istio-ca` intermediate secret.
+# That intermediate was issued by step-ca (YubiKey root), so Zot's cert chains
+# to the Homelab Root CA that every Talos node already trusts. Reusing the
+# istio-ca key for general internal certs is intentional — it is our in-cluster
+# intermediate CA.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: homelab-ca
+spec:
+  ca:
+    secretName: istio-ca

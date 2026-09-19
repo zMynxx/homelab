@@ -1,0 +1,28 @@
+---
+# NetworkPolicies in Istio Ambient namespaces block HBONE (port 15008) for
+# same-node pod-to-pod traffic. Cilium enforces pod-level NPs against the
+# HBONE port before ztunnel can decrypt it. This policy patches every
+# NetworkPolicy on admission to add a permissive ingress rule for port 15008
+# so ztunnel can tunnel traffic between pods on the same node.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: allow-hbone-in-networkpolicies
+spec:
+  rules:
+    - name: add-hbone-ingress
+      match:
+        any:
+          - resources:
+              kinds:
+                - NetworkPolicy
+              namespaceSelector:
+                matchLabels:
+                  istio.io/dataplane-mode: ambient
+      mutate:
+        patchStrategicMerge:
+          spec:
+            ingress:
+              - ports:
+                  - port: 15008
+                    protocol: TCP

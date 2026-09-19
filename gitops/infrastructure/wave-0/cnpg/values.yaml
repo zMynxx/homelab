@@ -1,0 +1,3 @@
+# CloudNativePG Operator — manages PostgreSQL clusters via CRDs
+# Helm chart: cnpg/cloudnative-pg v0.29.0 (operator v1.30.0)
+# Operator deploys to cnpg-system namespace

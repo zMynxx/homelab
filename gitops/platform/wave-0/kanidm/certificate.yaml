@@ -1,0 +1,25 @@
+---
+# Kanidm requires TLS natively — cert issued from the in-cluster intermediate CA
+# (homelab-ca, backed by istio-ca which chains to the YubiKey Root CA).
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kanidm-tls
+  namespace: kanidm
+spec:
+  secretName: kanidm-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: kanidm.opnsense.internal
+  dnsNames:
+    - kanidm.opnsense.internal
+    - kanidm.kanidm.svc.cluster.local
+    - kanidm.kanidm.svc
+    - kanidm
+  usages:
+    - server auth
+    - client auth
+  issuerRef:
+    name: homelab-ca
+    kind: ClusterIssuer
+    group: cert-manager.io

@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: infrastructure
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: https://github.com/zmynxx/homelab.git
+        revision: main
+        directories:
+          - path: gitops/infrastructure/*/*
+  template:
+    metadata:
+      name: '{{.path.basename}}'
+      namespace: argocd
+      annotations:
+        argocd.argoproj.io/sync-wave: '{{trimPrefix "wave-" (index (splitList "/" .path.path) 2)}}'
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/zmynxx/homelab.git
+        targetRevision: main
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

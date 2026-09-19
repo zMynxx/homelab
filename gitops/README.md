@@ -2,16 +2,70 @@
 
 This directory will contain all Kubernetes applications managed via ArgoCD in a GitOps fashion.
 
-## Planned Structure
+## Structure
 
 ```
 gitops/
-├── bootstrap/          # ArgoCD bootstrap configuration
-├── apps/              # Application manifests
-│   ├── base/          # Base Kustomize configurations
-│   └── overlays/      # Environment-specific overlays
-├── infrastructure/    # Infrastructure services (cert-manager, metallb, etc.)
-└── platform/          # Platform services (monitoring, logging, etc.)
+├── bootstrap/                    # ArgoCD self-management
+│   ├── root.yaml                 # Root app-of-apps (apply once to bootstrap)
+│   └── argocd/
+│       ├── values.yaml           # ArgoCD Helm values (SOPS/age, CMP, Dex, Dragonfly cache)
+│       ├── caddy-local-ca-cm.yaml
+│       ├── dex-tls-cert.yaml
+│       ├── oidc/                 # OIDC secret (SOPS encrypted)
+│       └── policies/             # ArgoCD RBAC AuthorizationPolicies
+├── apps/                         # ArgoCD Application CRDs (app-of-apps; root points here)
+│   ├── repositories.yaml         # ArgoCD repository secrets
+│   ├── argocd-oidc.yaml
+│   ├── argocd-policies.yaml
+│   ├── cilium.yaml
+│   ├── cilium-lb-ipam.yaml
+│   ├── cert-manager.yaml
+│   ├── cert-manager-extras.yaml
+│   ├── cert-manager-istio-csr.yaml
+│   ├── kyverno.yaml
+│   ├── kyverno-policies.yaml
+│   ├── longhorn.yaml
+│   ├── metrics-server.yaml
+│   ├── externaldns.yaml
+│   ├── spegel.yaml
+│   ├── reloader.yaml
+│   ├── cnpg.yaml
+│   ├── dragonfly-operator.yaml
+│   ├── dragonfly-argocd-cache.yaml
+│   ├── istio-ingress.yaml
+│   ├── kanidm.yaml
+│   ├── kaniop.yaml
+│   ├── oauth2-proxy.yaml
+│   ├── databases.yaml
+│   ├── grafana.yaml
+│   ├── otel-collector.yaml
+│   ├── tempo.yaml
+│   ├── victoria-logs.yaml
+│   ├── victoria-metrics.yaml
+│   └── zot.yaml
+├── infrastructure/               # Configs for cluster infrastructure components
+│   ├── cilium/                   # CNI + LB IPAM pool
+│   ├── cert-manager/             # cert-manager + istio-csr + step-issuer
+│   ├── kyverno/                  # Kyverno + policies/
+│   ├── longhorn/                 # Storage + nvme-wipe job
+│   ├── metrics-server/
+│   ├── externaldns/
+│   ├── spegel/                   # OCI image cache
+│   ├── cnpg/                     # CloudNativePG operator
+│   ├── dragonfly/                # DragonflyDB operator + ArgoCD cache CR
+│   └── istio-ingress/            # Gateway + certificate
+└── platform/                     # Configs for platform/application services
+    ├── observability/
+    │   ├── grafana/
+    │   ├── otel-collector/
+    │   ├── tempo/
+    │   ├── victoria-logs/
+    │   └── victoria-metrics/
+    ├── kanidm/                   # Identity provider (kaniop CRs)
+    ├── oauth2-proxy/             # SSO gateway (SOPS secret)
+    ├── databases/                # CNPG cluster CRs (Kustomize)
+    └── zot/                      # OCI registry
 ```
 
 ## GitOps Workflow
@@ -121,6 +175,30 @@ sops updatekeys path/to/file.sops.yaml
 | `key.txt.secret` | ❌ No | Private key — never commit |
 | `.sops.yaml` | ✅ Yes | Contains only the public key |
 
+## Cutover: Switching the Live Cluster
+
+The live ArgoCD root Application still points to `infra/k8s/argocd/apps`. To cut over:
+
+1. **Push this commit to `main`** (both old and new paths must exist in git simultaneously during cutover).
+
+2. **Apply the new root app** imperatively to update the live root Application:
+   ```bash
+   kubectl apply -f gitops/bootstrap/root.yaml
+   ```
+
+3. **Verify ArgoCD syncs from the new path** — the root app should show `gitops/apps` as its source and all child apps should remain healthy.
+
+4. **Remove the old sources** once confirmed stable:
+   ```bash
+   git rm -r infra/k8s/argocd/apps infra/k8s/argocd/oidc infra/k8s/argocd/policies
+   git rm -r infra/k8s/cilium infra/k8s/cert-manager infra/k8s/kyverno infra/k8s/longhorn
+   git rm -r infra/k8s/metrics-server infra/k8s/externaldns infra/k8s/spegel infra/k8s/cnpg
+   git rm -r infra/k8s/dragonfly infra/k8s/istio-ingress infra/k8s/databases
+   git rm -r infra/k8s/observability infra/k8s/kanidm infra/k8s/oauth2-proxy infra/k8s/zot
+   ```
+
+> The ArgoCD Helm Application (`argocd` itself) and its values still live in `infra/k8s/argocd/values.yaml` on the cluster — that file is now mirrored at `gitops/bootstrap/argocd/values.yaml`. Update the ArgoCD Application manifest's `$values` ref accordingly when you manage ArgoCD via GitOps.
+
 ## Security
 
 - SOPS-encrypted secrets (no plaintext credentials)
@@ -132,4 +210,4 @@ sops updatekeys path/to/file.sops.yaml
 
 ---
 
-**Status**: Directory structure pending - will be populated during GitOps migration
+**Status**: Migration complete. Old sources remain under `infra/k8s/` until the live root Application is updated (see Cutover below).

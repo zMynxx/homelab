@@ -1,0 +1,33 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: main
+  namespace: istio-ingress
+spec:
+  selector:
+    app: istio-ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+    - port:
+        number: 443
+        name: tls-kanidm-443
+        protocol: TLS
+      tls:
+        mode: PASSTHROUGH
+      hosts:
+        - kanidm.opnsense.internal
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: istio-ingress-tls
+      hosts:
+        - "*.opnsense.internal"

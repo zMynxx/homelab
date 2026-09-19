@@ -1,0 +1,155 @@
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: oauth2-proxy
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  displayname: OAuth2 Proxy
+  origin: https://oauth2proxy.opnsense.internal
+  redirectUrl:
+    - https://oauth2proxy.opnsense.internal/oauth2/callback
+  scopeMap:
+    - group: idm_all_persons
+      scopes:
+        - openid
+        - email
+        - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/oauth2proxy.png
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: grafana
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  displayname: Grafana
+  origin: https://grafana.opnsense.internal
+  redirectUrl:
+    - https://grafana.opnsense.internal/oauth2/callback
+  scopeMap:
+    - group: grafana-users
+      scopes:
+        - openid
+        - email
+        - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/grafana.png
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: longhorn
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  displayname: Longhorn
+  origin: https://longhorn.opnsense.internal
+  redirectUrl:
+    - https://longhorn.opnsense.internal/oauth2/callback
+  scopeMap:
+    - group: longhorn-users
+      scopes:
+        - openid
+        - email
+        - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/longhorn.png
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: zot
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  displayname: Zot
+  origin: https://zot.opnsense.internal
+  redirectUrl:
+    - https://zot.opnsense.internal/oauth2/callback
+  scopeMap:
+    - group: zot-users
+      scopes:
+        - openid
+        - email
+        - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/zot.png
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: hubble
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  displayname: Cilium Hubble
+  origin: https://hubble.opnsense.internal
+  redirectUrl:
+    - https://hubble.opnsense.internal/oauth2/callback
+  scopeMap:
+    - group: hubble-users
+      scopes:
+        - openid
+        - email
+        - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/cilium.png
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: kiali
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  displayname: Kiali
+  origin: https://kiali.opnsense.internal
+  redirectUrl:
+    - https://kiali.opnsense.internal/oauth2/callback
+  scopeMap:
+    - group: kiali-users
+      scopes:
+        - openid
+        - email
+        - profile
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/kiali.png
+
+---
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: argocd
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  displayname: ArgoCD
+  origin: https://argocd.opnsense.internal
+  redirectUrl:
+    - https://argocd.opnsense.internal/api/dex/callback
+  scopeMap:
+    - group: argocd-users
+      scopes:
+        - openid
+        - email
+        - profile
+        - groups
+  image:
+    url: https://raw.githubusercontent.com/zMynxx/homelab/main/infra/k8s/kanidm/logos/argocd.png
+

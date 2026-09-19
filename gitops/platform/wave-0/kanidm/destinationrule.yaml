@@ -1,0 +1,8 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: kanidm
+  namespace: kanidm
+spec:
+  host: kanidm.kanidm.svc.cluster.local

@@ -1,0 +1,21 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: kanidm
+  namespace: kanidm
+spec:
+  hosts:
+    - kanidm.opnsense.internal
+  gateways:
+    - istio-ingress/main
+  tls:
+    - match:
+        - port: 443
+          sniHosts:
+            - kanidm.opnsense.internal
+      route:
+        - destination:
+            host: kanidm.kanidm.svc.cluster.local
+            port:
+              number: 8443

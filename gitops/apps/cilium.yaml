@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/zmynxx/homelab.git
+    targetRevision: main
+    path: gitops/infrastructure/cilium
+  destination:
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: cilium-ca
+      namespace: kube-system
+      jsonPointers:
+        - /data
+    - group: ""
+      kind: Secret
+      name: hubble-relay-client-certs
+      namespace: kube-system
+      jsonPointers:
+        - /data
+    - group: ""
+      kind: Secret
+      name: hubble-server-certs
+      namespace: kube-system
+      jsonPointers:
+        - /data
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

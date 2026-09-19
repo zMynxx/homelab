@@ -1,0 +1,38 @@
+# Spegel — node-local OCI image mirror (peer-to-peer distribution)
+#
+# Chart:  oci://ghcr.io/spegel-org/helm-charts/spegel
+# Install:
+#   helm upgrade --install spegel oci://ghcr.io/spegel-org/helm-charts/spegel \
+#     -n spegel --create-namespace -f infra/k8s/spegel/values.yaml
+#
+# Talos containerd is configured (infra/talos/patches/all-nodes.yaml) to hit
+# localhost:5001 first, then Zot, then upstream. Spegel exposes the registry on
+# hostPort 5001 so containerd reaches it at localhost:5001 on every node.
+#
+# CRITICAL (Istio Ambient): ztunnel intercepts all pod traffic and will break
+# the OCI registry protocol on 5001 unless the pod is excluded from redirection.
+
+# Talos already owns containerd mirror config (all-nodes.yaml); stop Spegel from
+# rewriting /etc/containerd/certs.d (would conflict with Talos-managed config).
+spegel:
+  containerdMirrorAdd: false
+
+service:
+  registry:
+    # Bind on each node's localhost so containerd's mirror endpoint works.
+    hostPort: 5001
+    port: 5000
+
+podAnnotations:
+  # Ambient mode: stop ztunnel from redirecting 5001 (the real fix).
+  ambient.istio.io/redirection: disabled
+  # Documented sidecar exclusion (harmless in ambient, required if sidecars used).
+  traffic.sidecar.istio.io/excludeInboundPorts: "5001"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
