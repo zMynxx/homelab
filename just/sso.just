@@ -5,7 +5,7 @@
 #   - logged in: kanidm login --name idm_admin
 #   - SOPS age key at ./key.txt.secret
 
-SSO_DIR := justfile_directory() + "/infra/k8s/oauth2-proxy"
+SSO_DIR := justfile_directory() + "/gitops/platform/wave-2/oauth2-proxy"
 PROVISION_SCRIPT := justfile_directory() + "/just/sso-provision.sh"
 
 # Provision full SSO for a new app - Kanidm client, k8s manifests, SOPS secret, Caddy snippet
@@ -48,9 +48,9 @@ sso-rotate-secret app:
 	  SECRET_NAME="oauth2-proxy-${APP}-secrets"; \
 	  CLIENT_SECRET=$(kanidm system oauth2 show-basic-secret "${APP}" 2>/dev/null | tr -d "[:space:]"); \
 	  COOKIE_SECRET=$(python3 -c "import secrets,base64; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())"); \
-	  PLAIN=$(mktemp /tmp/sso-secret-XXXXXX.sops.yaml); \
-	  printf "apiVersion: v1\nkind: Secret\nmetadata:\n  name: %s\n  namespace: oauth2-proxy\nstringData:\n  OAUTH2_PROXY_CLIENT_SECRET: \"%s\"\n  OAUTH2_PROXY_COOKIE_SECRET: \"%s\"\n" "$SECRET_NAME" "$CLIENT_SECRET" "$COOKIE_SECRET" > "$PLAIN"; \
+	  PLAIN=$(mktemp /tmp/sso-secret-XXXXXX.yaml); \
+	  printf "apiVersion: isindir.github.com/v1alpha3\nkind: SopsSecret\nmetadata:\n  name: %s\n  namespace: oauth2-proxy\nspec:\n  secretTemplates:\n    - name: %s\n      stringData:\n        OAUTH2_PROXY_CLIENT_SECRET: \"%s\"\n        OAUTH2_PROXY_COOKIE_SECRET: \"%s\"\n" "$SECRET_NAME" "$SECRET_NAME" "$CLIENT_SECRET" "$COOKIE_SECRET" > "$PLAIN"; \
 	  SOPS_AGE_KEY_FILE={{AGE_KEY}} sops --encrypt "$PLAIN" > {{SSO_DIR}}/${APP}-secrets.sops.yaml; \
 	  rm -f "$PLAIN"; \
-	  echo "Secret rotated: infra/k8s/oauth2-proxy/${APP}-secrets.sops.yaml"; \
+	  echo "Secret rotated: gitops/platform/wave-2/oauth2-proxy/${APP}-secrets.sops.yaml"; \
 	  echo "Run: kubectl rollout restart deploy/oauth2-proxy-${APP} -n oauth2-proxy"'

@@ -36,22 +36,25 @@ echo "  Generated."
 
 echo ""
 echo "=== [4/5] Writing and encrypting Kubernetes manifests ==="
-PLAIN=$(mktemp /tmp/sso-secret-XXXXXX.sops.yaml)
+PLAIN=$(mktemp /tmp/sso-secret-XXXXXX.yaml)
 trap 'rm -f "$PLAIN"' EXIT
 
 cat > "$PLAIN" <<EOF
-apiVersion: v1
-kind: Secret
+apiVersion: isindir.github.com/v1alpha3
+kind: SopsSecret
 metadata:
   name: ${SECRET_NAME}
   namespace: oauth2-proxy
-stringData:
-  OAUTH2_PROXY_CLIENT_SECRET: "${CLIENT_SECRET}"
-  OAUTH2_PROXY_COOKIE_SECRET: "${COOKIE_SECRET}"
+spec:
+  secretTemplates:
+    - name: ${SECRET_NAME}
+      stringData:
+        OAUTH2_PROXY_CLIENT_SECRET: "${CLIENT_SECRET}"
+        OAUTH2_PROXY_COOKIE_SECRET: "${COOKIE_SECRET}"
 EOF
 
 SOPS_AGE_KEY_FILE="${AGE_KEY_FILE}" sops --encrypt "$PLAIN" > "${SSO_DIR}/${APP}-secrets.sops.yaml"
-echo "  Written: infra/k8s/oauth2-proxy/${APP}-secrets.sops.yaml"
+echo "  Written: gitops/platform/wave-2/oauth2-proxy/${APP}-secrets.sops.yaml"
 
 cat > "${SSO_DIR}/${APP}-deployment.yaml" <<EOF
 ---
@@ -139,7 +142,7 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
 EOF
-echo "  Written: infra/k8s/oauth2-proxy/${APP}-deployment.yaml"
+echo "  Written: gitops/platform/wave-2/oauth2-proxy/${APP}-deployment.yaml"
 
 cat > "${SSO_DIR}/${APP}-service.yaml" <<EOF
 ---
@@ -159,7 +162,16 @@ spec:
       port: 4180
       targetPort: 4180
 EOF
-echo "  Written: infra/k8s/oauth2-proxy/${APP}-service.yaml"
+echo "  Written: gitops/platform/wave-2/oauth2-proxy/${APP}-service.yaml"
+
+# Add new resources to kustomization.yaml if not already listed
+KUST="${SSO_DIR}/kustomization.yaml"
+for f in "${APP}-secrets.sops.yaml" "${APP}-deployment.yaml" "${APP}-service.yaml"; do
+  if ! grep -qF "  - $f" "$KUST"; then
+    echo "  - $f" >> "$KUST"
+    echo "  Added $f to kustomization.yaml"
+  fi
+done
 
 echo ""
 echo "=== [5/5] Caddy config snippet ==="
@@ -198,7 +210,7 @@ ${HOST} {
 CADDY
 
 echo "=== Done! Next steps ==="
-echo "  1. git add infra/k8s/oauth2-proxy/${APP}-*.yaml && git push"
+echo "  1. git add gitops/platform/wave-2/oauth2-proxy/${APP}-*.yaml gitops/platform/wave-2/oauth2-proxy/kustomization.yaml && git push"
 echo "     ArgoCD auto-syncs - no new Application needed."
 echo "  2. Add the Caddy config above to OPNsense and reload Caddy"
 echo "  3. Upload logo:  just sso-set-logo ${APP} /path/to/logo.png"

@@ -1,17 +1,10 @@
 # ArgoCD — GitOps engine for the homelab
 # Helm chart: argo/argo-cd v10.4.2 (ArgoCD v3.5.2)
 #
-# SOPS/age integration:
-#   - sops binary is mounted into the repo-server and the CMP sidecar
-#   - ksops is mounted into the Kustomize exec-plugin path for Kustomize+SOPS apps
-#   - The age private key is read from the `argocd-age-key` Secret (key: key.txt)
-#   - Create the Secret before installing:
-#       kubectl create secret generic argocd-age-key -n argocd \
-#         --from-file=key.txt=key.txt.secret
-#
-# CMP plugin `sops` handles apps whose source dir contains *.sops.yaml files
-# (raw encrypted Secret manifests). Helm and Kustomize apps use the built-in
-# engines; Kustomize+SOPS apps use ksops transparently via --enable-exec.
+# SOPS secret decryption is handled by sops-secrets-operator (not ArgoCD).
+# ArgoCD applies SopsSecret CRDs; the operator decrypts them into K8s Secrets.
+# Bootstrap: kubectl create secret generic sops-age-key -n sops-secrets-operator \
+#              --create-namespace --from-file=key.txt=key.txt.secret
 
 global:
   image:
@@ -31,8 +24,7 @@ configs:
   params:
     # TLS terminated by Istio ambient mesh — run server in plain HTTP mode
     server.insecure: "true"
-    # Allow Kustomize exec plugins (needed by ksops)
-    kustomize.buildOptions: "--enable-alpha-plugins --enable-exec --enable-helm"
+    kustomize.buildOptions: "--enable-helm"
     repo.server: "argocd-repo-server.argocd.svc.cluster.local:8081"
     # DragonflyDB Redis-compatible cache (3-replica cluster in argocd namespace)
     redis.server: "argocd-cache.argocd.svc.cluster.local:6379"
@@ -64,132 +56,10 @@ configs:
       g, argocd-users@kanidm.opnsense.internal, role:admin
     scopes: '[groups, email]'
 
-  # SOPS CMP plugin: decrypts raw *.sops.yaml Secret manifests
-  cmp:
-    create: true
-    plugins:
-      sops:
-        discover:
-          # Only claim dirs that have *.sops.yaml but NO kustomization.yaml.
-          # Kustomize+SOPS dirs use ksops via --enable-exec instead.
-          command: [sh, -c]
-          args:
-            - |
-              has_sops=$(find . -maxdepth 1 -name '*.sops.yaml' 2>/dev/null | head -1)
-              has_kust=$(find . -maxdepth 1 \( -name 'kustomization.yaml' -o -name 'kustomization.yml' \) 2>/dev/null | head -1)
-              [ -n "$has_sops" ] && [ -z "$has_kust" ]
-        generate:
-          command: [sh, -c]
-          args:
-            - |
-              find . -maxdepth 3 -name '*.yaml' ! -name '*.sops.yaml' | sort | while read f; do
-                cat "$f"
-                echo "---"
-              done
-              find . -maxdepth 3 -name '*.sops.yaml' | sort | while read f; do
-                /usr/local/bin/sops --decrypt "$f"
-                echo "---"
-              done
-
 # ── repo-server ───────────────────────────────────────────────────────────────
 repoServer:
   networkPolicy:
     create: false
-  volumes:
-    - name: custom-tools
-      emptyDir: {}
-    - name: age-key
-      secret:
-        secretName: argocd-age-key
-        optional: true
-    - name: cmp-plugin
-      configMap:
-        name: argocd-cmp-cm
-
-  # Download sops + ksops ARM64 binaries at startup
-  initContainers:
-    - name: download-tools
-      image: alpine:3.21
-      command: [sh, -c]
-      args:
-        - |
-          set -e
-          echo "Downloading sops v3.13.0 (arm64)..."
-          wget -qO /custom-tools/sops \
-            https://github.com/getsops/sops/releases/download/v3.13.0/sops-v3.13.0.linux.arm64
-          chmod +x /custom-tools/sops
-
-          echo "Downloading ksops v4.3.3 (arm64)..."
-          wget -qO /tmp/ksops.tar.gz \
-            https://github.com/viaduct-ai/kustomize-sops/releases/download/v4.3.3/ksops_4.3.3_Linux_arm64.tar.gz
-          tar -xf /tmp/ksops.tar.gz -C /tmp
-          cp /tmp/ksops /custom-tools/ksops
-          chmod +x /custom-tools/ksops
-
-          echo "Tools ready: $(ls -lh /custom-tools/)"
-      volumeMounts:
-        - name: custom-tools
-          mountPath: /custom-tools
-
-  # Mount sops into main repo-server (for Kustomize+ksops and direct use)
-  volumeMounts:
-    - name: custom-tools
-      mountPath: /usr/local/bin/sops
-      subPath: sops
-    # ksops exec-plugin path: $KUSTOMIZE_PLUGIN_HOME/<group>/<version>/<kind>/<kind>
-    - name: custom-tools
-      mountPath: /home/argocd/.config/kustomize/plugin/viaduct.ai/v1/ksops/ksops
-      subPath: ksops
-    - name: age-key
-      mountPath: /age-key
-      readOnly: true
-
-  env:
-    - name: SOPS_AGE_KEY_FILE
-      value: /age-key/key.txt
-    - name: KUSTOMIZE_PLUGIN_HOME
-      value: /home/argocd/.config/kustomize/plugin
-
-  # CMP sidecar — runs argocd-cmp-server with sops available
-  extraContainers:
-    - name: cmp-sops
-      command: [/var/run/argocd/argocd-cmp-server]
-      image: quay.io/argoproj/argocd:v3.5.2
-      env:
-        - name: SOPS_AGE_KEY_FILE
-          value: /age-key/key.txt
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 999
-        allowPrivilegeEscalation: false
-        seccompProfile:
-          type: RuntimeDefault
-        capabilities:
-          drop: [ALL]
-      resources:
-        requests:
-          cpu: 10m
-          memory: 64Mi
-        limits:
-          cpu: 200m
-          memory: 128Mi
-      volumeMounts:
-        - name: var-files
-          mountPath: /var/run/argocd
-        - name: plugins
-          mountPath: /home/argocd/cmp-server/plugins
-        - name: tmp
-          mountPath: /tmp
-        - name: custom-tools
-          mountPath: /usr/local/bin/sops
-          subPath: sops
-        - name: age-key
-          mountPath: /age-key
-          readOnly: true
-        - name: cmp-plugin
-          mountPath: /home/argocd/cmp-server/config/plugin.yaml
-          subPath: sops.yaml
-
   resources:
     requests:
       cpu: 50m
