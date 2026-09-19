@@ -10,3 +10,27 @@ secretsAsFiles:
 extraEnv:
   - name: SOPS_AGE_KEY_FILE
     value: /tmp/sops-age/key.txt
+
+securityContext:
+  enabled: true
+  runAsUser: 13001
+  runAsGroup: 13001
+  runAsNonRoot: true
+  fsGroup: 13001
+  seccompProfileType: RuntimeDefault
+  container:
+    enabled: true
+    capabilities:
+      drop:
+        - ALL
+      add: []
+    customContainerSecurityContext:
+      allowPrivilegeEscalation: false
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
