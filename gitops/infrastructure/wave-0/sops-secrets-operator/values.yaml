@@ -31,7 +31,7 @@ securityContext:
       runAsGroup: 13001
       privileged: false
 
-enforceOwnership: true
+defaultEnforceOwnership: true
 
 resources:
   requests:
