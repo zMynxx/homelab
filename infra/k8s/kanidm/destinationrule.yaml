@@ -6,7 +6,3 @@ metadata:
   namespace: kanidm
 spec:
   host: kanidm.kanidm.svc.cluster.local
-  trafficPolicy:
-    tls:
-      mode: SIMPLE
-      insecureSkipVerify: true

@@ -16,6 +16,14 @@ spec:
         - "*"
     - port:
         number: 443
+        name: tls-kanidm-443
+        protocol: TLS
+      tls:
+        mode: PASSTHROUGH
+      hosts:
+        - kanidm.opnsense.internal
+    - port:
+        number: 443
         name: https
         protocol: HTTPS
       tls:
@@ -23,4 +31,3 @@ spec:
         credentialName: istio-ingress-tls
       hosts:
         - "*.opnsense.internal"
-
