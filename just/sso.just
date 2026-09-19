@@ -11,6 +11,11 @@
 
 SSO_DIR := justfile_directory() + "/gitops/platform/wave-2/oauth2-proxy"
 
+# Generate a one-time credential reset link for a user (no CRD equivalent)
+# Usage: just sso-reset-credentials lior
+sso-reset-credentials username:
+	kanidm account credential create-reset-token --name idm_admin {{username}}
+
 # Upload a logo image for an app in Kanidm (PNG, WEBP, or SVG)
 # Usage: just sso-set-logo adguard /path/to/adguard.png
 sso-set-logo app logo_path:
