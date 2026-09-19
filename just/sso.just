@@ -1,4 +1,8 @@
-# SSO App Provisioning - Kanidm + oauth2-proxy per-app pattern
+# SSO Operations - Kanidm + oauth2-proxy
+#
+# OAuth2 clients, groups, and users are managed declaratively via kaniop CRDs
+# in gitops/platform/wave-0/kanidm/. Use these recipes only for operations
+# that have no CRD equivalent (logo upload, secret rotation).
 #
 # Prerequisites:
 #   - kanidm client configured (~/.config/kanidm/config with uri + verify_ca)
@@ -6,12 +10,6 @@
 #   - SOPS age key at ./key.txt.secret
 
 SSO_DIR := justfile_directory() + "/gitops/platform/wave-2/oauth2-proxy"
-PROVISION_SCRIPT := justfile_directory() + "/just/sso-provision.sh"
-
-# Provision full SSO for a new app - Kanidm client, k8s manifests, SOPS secret, Caddy snippet
-# Usage: just sso-add-app grafana "Grafana" 192.168.30.205 192.168.30.206:3000
-sso-add-app app display lb_ip upstream:
-	bash {{PROVISION_SCRIPT}} {{app}} {{display}} {{lb_ip}} {{upstream}} {{AGE_KEY}} {{SSO_DIR}}
 
 # Upload a logo image for an app in Kanidm (PNG, WEBP, or SVG)
 # Usage: just sso-set-logo adguard /path/to/adguard.png
@@ -19,7 +17,7 @@ sso-set-logo app logo_path:
 	kanidm system oauth2 set-image {{app}} {{logo_path}}
 	@echo "Logo set for {{app}}"
 
-# Add a user to an app's access group
+# Add a user to an app's access group (prefer editing KanidmGroup CRD in gitops)
 # Usage: just sso-add-user adguard lior
 sso-add-user app username:
 	kanidm group add-members {{app}}_users {{username}}
@@ -40,7 +38,8 @@ sso-list-users app:
 sso-list-apps:
 	kanidm system oauth2 list
 
-# Rotate client secret for an app - re-encrypts SOPS secret, prints rollout command
+# Rotate client secret for an app — fetches new secret from Kanidm, re-encrypts
+# as SopsSecret, commits. ArgoCD + sops-secrets-operator apply it automatically.
 # Usage: just sso-rotate-secret adguard
 sso-rotate-secret app:
 	bash -c 'set -euo pipefail; \
