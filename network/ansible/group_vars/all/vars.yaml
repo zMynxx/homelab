@@ -1,0 +1,7 @@
+---
+# Non-secret OPNsense connection defaults.
+# Credentials (opnsense_host, opnsense_api_key, opnsense_api_secret, opnsense_verify_ssl)
+# are loaded from network/secrets.sops.yaml via community.sops.load_vars in each playbook.
+#
+# Run playbooks with: SOPS_AGE_KEY_FILE=../../key.txt.secret ansible-playbook ...
+opnsense_port: 8443

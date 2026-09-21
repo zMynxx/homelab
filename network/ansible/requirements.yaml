@@ -1,0 +1,9 @@
+---
+# IMPORTANT: Pin collection version to match your OPNsense version.
+# These modules have NO multi-version support — check releases before upgrading OPNsense:
+# https://github.com/O-X-L/ansible-opnsense/releases
+collections:
+  - name: oxlorg.opnsense
+    version: "25.7.8"  # update to match OPNsense version
+  - name: community.sops
+    version: ">=1.6.0"

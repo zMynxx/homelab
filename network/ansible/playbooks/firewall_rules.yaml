@@ -1,0 +1,242 @@
+---
+# Firewall rules for all VLAN interfaces.
+# Rules are identified by description — keep descriptions unique per interface.
+# Rule ordering matches FIREWALL_RULES.md (first-match-wins, quick mode).
+- hosts: localhost
+  gather_facts: false
+
+  pre_tasks:
+    - name: Load OPNsense credentials
+      community.sops.load_vars:
+        file: "{{ playbook_dir }}/../../secrets.sops.yaml"
+      no_log: true
+
+  module_defaults:
+    oxlorg.opnsense.rule:
+      firewall: "{{ opnsense_host }}"
+      port: "{{ opnsense_port }}"
+      api_key: "{{ opnsense_api_key }}"
+      api_secret: "{{ opnsense_api_secret }}"
+      ssl_verify: "{{ opnsense_verify_ssl | bool }}"
+    oxlorg.opnsense.reload:
+      firewall: "{{ opnsense_host }}"
+      port: "{{ opnsense_port }}"
+      api_key: "{{ opnsense_api_key }}"
+      api_secret: "{{ opnsense_api_secret }}"
+      ssl_verify: "{{ opnsense_verify_ssl | bool }}"
+
+  tasks:
+    # -------------------------------------------------------------------------
+    # VLAN 10 — Management (opt6, 192.168.10.0/24)
+    # Policy: no internet, infra access only
+    # -------------------------------------------------------------------------
+    - name: "VLAN10 | pass | HTTPS to OPNsense UI"
+      oxlorg.opnsense.rule:
+        sequence: 1
+        action: pass
+        interface: opt6
+        ip_protocol: inet
+        protocol: tcp
+        source_net: opt6
+        destination_net: "(self)"
+        destination_port: "443"
+        description: "VLAN10 | pass | HTTPS to OPNsense UI"
+        log: false
+        state: present
+
+    - name: "VLAN10 | pass | DNS to OPNsense"
+      oxlorg.opnsense.rule:
+        sequence: 2
+        action: pass
+        interface: opt6
+        ip_protocol: inet
+        protocol: "tcp/udp"
+        source_net: opt6
+        destination_net: "(self)"
+        destination_port: "53"
+        description: "VLAN10 | pass | DNS to OPNsense"
+        log: false
+        state: present
+
+    - name: "VLAN10 | pass | management access to internal networks"
+      oxlorg.opnsense.rule:
+        sequence: 3
+        action: pass
+        interface: opt6
+        ip_protocol: inet
+        protocol: any
+        source_net: opt6
+        destination_net: Internal_Networks
+        description: "VLAN10 | pass | management access to internal networks"
+        log: false
+        state: present
+
+    - name: "VLAN10 | block | access to DMZ"
+      oxlorg.opnsense.rule:
+        sequence: 4
+        action: block
+        interface: opt6
+        ip_protocol: inet
+        protocol: any
+        source_net: opt6
+        destination_net: DMZ_Network
+        description: "VLAN10 | block | access to DMZ"
+        log: true
+        state: present
+
+    - name: "VLAN10 | block | internet access"
+      oxlorg.opnsense.rule:
+        sequence: 5
+        action: block
+        interface: opt6
+        ip_protocol: inet
+        protocol: any
+        source_net: opt6
+        destination_net: any
+        description: "VLAN10 | block | internet access"
+        log: true
+        state: present
+
+    # -------------------------------------------------------------------------
+    # VLAN 20 — DMZ/Guest (opt4, 192.168.20.0/24)
+    # Policy: internet only, no internal access
+    # -------------------------------------------------------------------------
+    - name: "VLAN20 | pass | TinyCA ACME (step-ca:8443)"
+      oxlorg.opnsense.rule:
+        sequence: 1
+        action: pass
+        interface: opt4
+        ip_protocol: inet
+        protocol: tcp
+        source_net: opt4
+        destination_net: "192.168.10.37"
+        destination_port: "8443"
+        description: "VLAN20 | pass | TinyCA ACME (step-ca:8443)"
+        log: false
+        state: present
+
+    - name: "VLAN20 | block | access to internal networks"
+      oxlorg.opnsense.rule:
+        sequence: 2
+        action: block
+        interface: opt4
+        ip_protocol: inet
+        protocol: any
+        source_net: opt4
+        destination_net: Internal_Networks
+        description: "VLAN20 | block | access to internal networks"
+        log: true
+        state: present
+
+    - name: "VLAN20 | block | qfeeds malware IPs"
+      oxlorg.opnsense.rule:
+        sequence: 3
+        action: block
+        interface: opt4
+        ip_protocol: inet
+        protocol: any
+        source_net: opt4
+        destination_net: __qfeeds_malware_ip
+        description: "VLAN20 | block | qfeeds malware IPs"
+        log: true
+        state: present
+
+    - name: "VLAN20 | pass | internet access"
+      oxlorg.opnsense.rule:
+        sequence: 4
+        action: pass
+        interface: opt4
+        ip_protocol: inet
+        protocol: any
+        source_net: opt4
+        destination_net: any
+        description: "VLAN20 | pass | internet access"
+        log: false
+        state: present
+
+    # -------------------------------------------------------------------------
+    # VLAN 30 — Internal (opt5, 192.168.30.0/24)
+    # Policy: full internal + internet, DMZ isolated
+    # -------------------------------------------------------------------------
+    - name: "VLAN30 | pass | DNS to OPNsense"
+      oxlorg.opnsense.rule:
+        sequence: 1
+        action: pass
+        interface: opt5
+        ip_protocol: inet
+        protocol: "tcp/udp"
+        source_net: opt5
+        destination_net: "(self)"
+        destination_port: "53"
+        description: "VLAN30 | pass | DNS to OPNsense"
+        log: false
+        state: present
+
+    - name: "VLAN30 | pass | access to management VLAN"
+      oxlorg.opnsense.rule:
+        sequence: 2
+        action: pass
+        interface: opt5
+        ip_protocol: inet
+        protocol: any
+        source_net: opt5
+        destination_net: Management_Network
+        description: "VLAN30 | pass | access to management VLAN"
+        log: false
+        state: present
+
+    - name: "VLAN30 | pass | access to legacy LAN (migration)"
+      oxlorg.opnsense.rule:
+        sequence: 3
+        action: pass
+        interface: opt5
+        ip_protocol: inet
+        protocol: any
+        source_net: opt5
+        destination_net: lan
+        description: "VLAN30 | pass | access to legacy LAN (migration)"
+        log: false
+        state: present
+
+    - name: "VLAN30 | block | access to DMZ"
+      oxlorg.opnsense.rule:
+        sequence: 4
+        action: block
+        interface: opt5
+        ip_protocol: inet
+        protocol: any
+        source_net: opt5
+        destination_net: DMZ_Network
+        description: "VLAN30 | block | access to DMZ"
+        log: true
+        state: present
+
+    - name: "VLAN30 | block | qfeeds malware IPs"
+      oxlorg.opnsense.rule:
+        sequence: 5
+        action: block
+        interface: opt5
+        ip_protocol: inet
+        protocol: any
+        source_net: opt5
+        destination_net: __qfeeds_malware_ip
+        description: "VLAN30 | block | qfeeds malware IPs"
+        log: true
+        state: present
+
+    - name: "VLAN30 | pass | internet access"
+      oxlorg.opnsense.rule:
+        sequence: 6
+        action: pass
+        interface: opt5
+        ip_protocol: inet
+        protocol: any
+        source_net: opt5
+        destination_net: any
+        description: "VLAN30 | pass | internet access"
+        log: false
+        state: present
+
+    - name: Apply firewall rule changes
+      oxlorg.opnsense.reload:
+        target: filter

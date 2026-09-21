@@ -1,0 +1,35 @@
+---
+# Note: This playbook manages VLAN definitions on the trunk interface.
+# Interface assignment (mapping vlan devices to opt4/opt5/opt6) and DHCP server
+# configuration still require the OPNsense web UI (API limitation).
+- hosts: localhost
+  gather_facts: false
+
+  pre_tasks:
+    - name: Load OPNsense credentials
+      community.sops.load_vars:
+        file: "{{ playbook_dir }}/../../secrets.sops.yaml"
+      no_log: true
+
+  module_defaults:
+    oxlorg.opnsense.vlan:
+      firewall: "{{ opnsense_host }}"
+      port: "{{ opnsense_port }}"
+      api_key: "{{ opnsense_api_key }}"
+      api_secret: "{{ opnsense_api_secret }}"
+      ssl_verify: "{{ opnsense_verify_ssl | bool }}"
+
+  tasks:
+    - name: Manage VLANs on igc1 trunk
+      oxlorg.opnsense.vlan:
+        device: igc1
+        vlan_tag: "{{ item.tag }}"
+        description: "{{ item.description }}"
+        state: present
+      loop:
+        - tag: 10
+          description: "Management VLAN - infrastructure (switches, APs, IPMI)"
+        - tag: 20
+          description: "DMZ/Guest VLAN - public-facing services, guest Wi-Fi"
+        - tag: 30
+          description: "Internal VLAN - Talos cluster, workstations, internal services"

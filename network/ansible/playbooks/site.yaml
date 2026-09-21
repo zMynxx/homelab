@@ -1,0 +1,6 @@
+---
+# Master playbook — runs all OPNsense config in dependency order.
+# Run with: SOPS_AGE_KEY_FILE=../../../key.txt.secret ansible-playbook playbooks/site.yaml
+- import_playbook: vlans.yaml
+- import_playbook: aliases.yaml
+- import_playbook: firewall_rules.yaml

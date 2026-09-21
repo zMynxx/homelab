@@ -1,0 +1,67 @@
+---
+- hosts: localhost
+  gather_facts: false
+
+  pre_tasks:
+    - name: Load OPNsense credentials
+      community.sops.load_vars:
+        file: "{{ playbook_dir }}/../../secrets.sops.yaml"
+      no_log: true
+
+  module_defaults:
+    oxlorg.opnsense.alias:
+      firewall: "{{ opnsense_host }}"
+      port: "{{ opnsense_port }}"
+      api_key: "{{ opnsense_api_key }}"
+      api_secret: "{{ opnsense_api_secret }}"
+      ssl_verify: "{{ opnsense_verify_ssl | bool }}"
+    oxlorg.opnsense.reload:
+      firewall: "{{ opnsense_host }}"
+      port: "{{ opnsense_port }}"
+      api_key: "{{ opnsense_api_key }}"
+      api_secret: "{{ opnsense_api_secret }}"
+      ssl_verify: "{{ opnsense_verify_ssl | bool }}"
+
+  tasks:
+    - name: Network aliases
+      oxlorg.opnsense.alias:
+        name: "{{ item.name }}"
+        type: network
+        content: "{{ item.content }}"
+        description: "{{ item.description }}"
+        state: present
+      loop:
+        - name: Internal_Networks
+          description: "Internal networks to protect from guest VLAN"
+          content:
+            - "192.168.1.0/24"
+            - "192.168.10.0/24"
+            - "192.168.30.0/24"
+        - name: DMZ_Network
+          description: "DMZ/Guest VLAN - isolated network"
+          content:
+            - "192.168.20.0/24"
+        - name: Management_Network
+          description: "Management VLAN - infrastructure devices"
+          content:
+            - "192.168.10.0/24"
+        - name: RFC1918_Private
+          description: "All RFC1918 private address space"
+          content:
+            - "192.168.0.0/16"
+            - "10.0.0.0/8"
+            - "172.16.0.0/12"
+
+    - name: Port aliases
+      oxlorg.opnsense.alias:
+        name: OPNsense_WebUI
+        type: port
+        content:
+          - "443"
+          - "8443"
+        description: "OPNsense web UI ports (HTTPS)"
+        state: present
+
+    - name: Apply alias changes
+      oxlorg.opnsense.reload:
+        target: alias
