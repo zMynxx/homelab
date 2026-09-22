@@ -8,4 +8,5 @@ helmCharts:
     releaseName: *name
     namespace: longhorn-system
     valuesFile: values.yaml
-resources: []
+resources:
+  - virtualservice.yaml

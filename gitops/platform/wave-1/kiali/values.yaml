@@ -1,0 +1,30 @@
+auth:
+  strategy: anonymous
+
+server:
+  web_fqdn: kiali.opnsense.internal
+  web_port: 443
+  web_schema: https
+
+deployment:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+external_services:
+  prometheus:
+    url: http://victoria-metrics-single-server.monitoring.svc.cluster.local:8428
+  grafana:
+    enabled: true
+    in_cluster_url: http://grafana.monitoring.svc.cluster.local:80
+    url: https://grafana.opnsense.internal
+  tracing:
+    enabled: true
+    in_cluster_url: http://tempo.monitoring.svc.cluster.local:3200
+    use_grpc: false
+  istio:
+    root_namespace: istio-system

@@ -11,3 +11,4 @@ helmCharts:
 resources:
   - certificate.yaml
   - gateway.yaml
+  - authorization-policy.yaml

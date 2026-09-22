@@ -6,3 +6,4 @@ resources:
   - secrets.sops.yaml
   - deployment.yaml
   - service.yaml
+  - virtualservice.yaml

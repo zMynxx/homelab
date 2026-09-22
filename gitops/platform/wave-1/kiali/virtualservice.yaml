@@ -1,0 +1,17 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: kiali
+  namespace: istio-system
+spec:
+  hosts:
+    - kiali.opnsense.internal
+  gateways:
+    - istio-ingress/main
+  http:
+    - route:
+        - destination:
+            host: kiali.istio-system.svc.cluster.local
+            port:
+              number: 20001

@@ -121,7 +121,7 @@ dashboards:
 
 grafana.ini:
   server:
-    domain: grafana.homelab.internal
+    domain: grafana.opnsense.internal
   analytics:
     check_for_updates: false
   unified_alerting:

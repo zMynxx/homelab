@@ -1,0 +1,17 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: hubble-ui
+  namespace: kube-system
+spec:
+  hosts:
+    - hubble.opnsense.internal
+  gateways:
+    - istio-ingress/main
+  http:
+    - route:
+        - destination:
+            host: hubble-ui.kube-system.svc.cluster.local
+            port:
+              number: 80

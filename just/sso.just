@@ -11,6 +11,36 @@
 
 SSO_DIR := justfile_directory() + "/gitops/platform/wave-2/oauth2-proxy"
 
+# Register OAuth2-proxy as Istio ext-authz provider in meshConfig.
+# Idempotent — skips if already registered. Requires yq v4+.
+# Usage: just sso-register-ext-authz
+sso-register-ext-authz:
+	bash -c 'set -euo pipefail; \
+	  MESH=$(kubectl get cm istio -n istio-system -o jsonpath="{.data.mesh}"); \
+	  if echo "$MESH" | yq -e ".extensionProviders[] | select(.name == \"oauth2-proxy\")" > /dev/null 2>&1; then \
+	    echo "ext-authz provider oauth2-proxy already registered — skipping"; exit 0; \
+	  fi; \
+	  TMPF=$(mktemp /tmp/istio-mesh-XXXXXX.yaml); \
+	  echo "$MESH" | yq ".extensionProviders += [{\"name\": \"oauth2-proxy\", \"envoyExtAuthz\": { \
+	    \"service\": \"oauth2-proxy.oauth2-proxy.svc.cluster.local\", \
+	    \"port\": 4180, \
+	    \"includeRequestHeadersInCheck\": [\"cookie\", \"authorization\"], \
+	    \"headersToUpstreamOnAllow\": [\"authorization\", \"x-auth-request-user\", \"x-auth-request-email\"], \
+	    \"headersToDownstreamOnDeny\": [\"set-cookie\", \"content-type\"], \
+	    \"headersToDownstreamOnAllow\": [\"set-cookie\"] \
+	  }}]" > "$TMPF"; \
+	  kubectl create cm istio -n istio-system --from-file=mesh="$TMPF" --dry-run=client -o yaml | kubectl apply -f -; \
+	  rm -f "$TMPF"; \
+	  echo "Restarting istiod..."; \
+	  kubectl rollout restart deploy/istiod -n istio-system; \
+	  kubectl rollout status deploy/istiod -n istio-system --timeout=120s; \
+	  echo "Done: OAuth2-proxy registered as ext-authz provider."'
+
+# Verify ext-authz provider is registered in meshConfig
+# Usage: just sso-verify-ext-authz
+sso-verify-ext-authz:
+	kubectl get cm istio -n istio-system -o jsonpath='{.data.mesh}' | yq '.extensionProviders[] | select(.name == "oauth2-proxy")'
+
 # Generate a one-time credential reset link for a user (no CRD equivalent)
 # Usage: just sso-reset-credentials lior
 sso-reset-credentials username:

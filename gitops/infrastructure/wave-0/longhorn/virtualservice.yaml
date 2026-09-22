@@ -1,0 +1,17 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: longhorn
+  namespace: longhorn-system
+spec:
+  hosts:
+    - longhorn.opnsense.internal
+  gateways:
+    - istio-ingress/main
+  http:
+    - route:
+        - destination:
+            host: longhorn-frontend.longhorn-system.svc.cluster.local
+            port:
+              number: 80
