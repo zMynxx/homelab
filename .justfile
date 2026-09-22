@@ -1,5 +1,8 @@
 #!/usr/bin/env just --justfile
 
+HOMELAB_DIR := justfile_directory()
+AGE_KEY     := HOMELAB_DIR + "/key.txt.secret"
+
 import 'just/talos.just'
 import 'just/observability.just'
 import 'just/sso.just'

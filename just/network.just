@@ -1,7 +1,5 @@
 # ── OPNsense Network Management ───────────────────────────────────────────────
 
-HOMELAB_DIR   := justfile_directory()
-AGE_KEY       := HOMELAB_DIR + "/key.txt.secret"
 ANSIBLE_DIR   := HOMELAB_DIR + "/network/ansible"
 
 # Install Ansible collections (run once or after updating requirements.yaml)

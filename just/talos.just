@@ -2,9 +2,7 @@
 
 TALOS_DIR      := justfile_directory() + "/infra/talos"
 
-HOMELAB_DIR    := justfile_directory()
 SOPS_FILE      := HOMELAB_DIR + "/infra/tinyca/pki/pki-export/pki-export.sops.yaml"
-AGE_KEY        := HOMELAB_DIR + "/key.txt.secret"
 TALOSCONFIG    := TALOS_DIR + "/clusterconfig/talosconfig"
 CP_NODES       := "192.168.30.103,192.168.30.104,192.168.30.105"
 BOOTSTRAP_NODE := "192.168.30.103"
